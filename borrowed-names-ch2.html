@@ -1,0 +1,1378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Weight of Borrowed Names — Chapter Two</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=Cinzel:wght@400;600&family=Cinzel+Decorative:wght@400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1a1410;
+    --paper: #f0e8d5;
+    --paper-dark: #e0d4b8;
+    --amber: #c8842a;
+    --amber-dim: #8b5a1a;
+    --navy: #0d1b2a;
+    --navy-mid: #1a2e42;
+    --navy-light: #243548;
+    --brass: #b8943a;
+    --brass-dim: #7a6225;
+    --rust: #8b3a2a;
+    --mist: #c8d4d8;
+    --green-dim: #3a5a2a;
+    --blue-dim: #2a4a6a;
+    --permanent: #d4a843;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--navy);
+    min-height: 100vh;
+    font-family: 'IM Fell English', Georgia, serif;
+    color: var(--paper);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 200;
+    opacity: 0.4;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    top: -200px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 700px;
+    height: 700px;
+    background: radial-gradient(circle, rgba(200,132,42,0.06) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .screen { display: none; width: 100%; }
+  .screen.active { display: flex; flex-direction: column; align-items: center; }
+
+  /* ── LOAD SCREEN ── */
+  #screen-load {
+    min-height: 100vh;
+    justify-content: center;
+    padding: 4rem 1.5rem;
+    text-align: center;
+    position: relative;
+    z-index: 1;
+  }
+
+  .load-panel { max-width: 560px; width: 100%; }
+
+  .title-ornament { color: var(--brass); font-size: 1.3rem; letter-spacing: 0.5em; margin-bottom: 2rem; opacity: 0.6; }
+  .title-main { font-family: 'Cinzel Decorative', serif; font-size: clamp(1.8rem, 5vw, 2.8rem); line-height: 1.35; text-shadow: 0 0 60px rgba(200,132,42,0.25); margin-bottom: 0.4rem; }
+  .title-sub { font-family: 'Cinzel', serif; font-size: 0.75rem; letter-spacing: 0.35em; color: var(--brass); text-transform: uppercase; margin-bottom: 2.5rem; }
+  .title-rule { width: 100px; height: 1px; background: linear-gradient(to right, transparent, var(--brass), transparent); margin: 0 auto 2.5rem; }
+
+  .load-premise { font-style: italic; color: var(--mist); font-size: 0.95rem; line-height: 2; max-width: 460px; margin: 0 auto 2.5rem; opacity: 0.8; }
+  .load-label { font-family: 'Cinzel', serif; font-size: 0.65rem; letter-spacing: 0.3em; color: var(--brass); text-transform: uppercase; margin-bottom: 0.8rem; }
+  .load-note { font-style: italic; font-size: 0.85rem; color: var(--brass-dim); line-height: 1.7; margin-bottom: 1rem; }
+
+  .save-paste {
+    width: 100%; height: 70px; background: rgba(0,0,0,0.25); border: 1px solid var(--brass-dim);
+    color: var(--mist); font-family: monospace; font-size: 0.7rem; padding: 0.8rem;
+    resize: none; outline: none; line-height: 1.5; margin-bottom: 0.8rem;
+    transition: border-color 0.3s;
+  }
+  .save-paste:focus { border-color: var(--amber); }
+
+  .btn-primary {
+    font-family: 'Cinzel', serif; font-size: 0.75rem; letter-spacing: 0.3em; text-transform: uppercase;
+    background: transparent; border: 1px solid var(--brass-dim); color: var(--brass);
+    padding: 0.85rem 2.8rem; cursor: pointer; transition: all 0.3s; margin-bottom: 0.8rem;
+    display: inline-block;
+  }
+  .btn-primary:hover { border-color: var(--amber); color: var(--amber); background: rgba(200,132,42,0.04); }
+
+  .btn-secondary {
+    font-family: 'Cinzel', serif; font-size: 0.65rem; letter-spacing: 0.25em; text-transform: uppercase;
+    background: transparent; border: none; color: var(--brass-dim);
+    padding: 0.5rem 1rem; cursor: pointer; transition: color 0.2s; text-decoration: underline;
+    text-underline-offset: 3px; text-decoration-color: transparent;
+  }
+  .btn-secondary:hover { color: var(--brass); text-decoration-color: var(--brass-dim); }
+
+  .load-divider { 
+    display: flex; align-items: center; gap: 1.2rem; 
+    margin: 1.5rem 0;
+    color: var(--brass-dim); font-family: 'Cinzel', serif; font-size: 0.6rem; letter-spacing: 0.3em; text-transform: uppercase;
+  }
+  .load-divider::before, .load-divider::after { content: ''; flex: 1; height: 1px; background: rgba(184,148,58,0.2); }
+
+  .error-inline { color: var(--rust); font-style: italic; font-size: 0.85rem; margin-top: 0.5rem; min-height: 1.2em; }
+
+  /* ── FLOATING BUTTONS ── */
+  .float-buttons {
+    position: fixed; top: 1.5rem; right: 1.5rem; display: flex; flex-direction: column; gap: 0.5rem; z-index: 50;
+  }
+  .float-btn {
+    font-family: 'Cinzel', serif; font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase;
+    background: rgba(13,27,42,0.85); border: 1px solid var(--brass-dim); color: var(--brass-dim);
+    padding: 0.5rem 0.9rem; cursor: pointer; transition: all 0.22s; backdrop-filter: blur(4px);
+  }
+  .float-btn:hover { border-color: var(--brass); color: var(--brass); }
+
+  /* ── GAME SCREEN ── */
+  #screen-game {
+    position: relative; z-index: 1; min-height: 100vh; padding-bottom: 4rem;
+  }
+
+  .game-wrap { max-width: 680px; width: 100%; padding: 2.5rem 1.5rem; }
+
+  .chapter-header {
+    text-align: center; margin-bottom: 2.5rem; padding-bottom: 1.5rem;
+    border-bottom: 1px solid rgba(184,148,58,0.18);
+  }
+  .chapter-label { font-family: 'Cinzel', serif; font-size: 0.6rem; letter-spacing: 0.45em; color: var(--brass-dim); text-transform: uppercase; margin-bottom: 0.5rem; }
+  .chapter-title { font-family: 'Cinzel', serif; font-size: 1.05rem; color: var(--brass); }
+
+  .sense-indicator {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    font-family: 'Cinzel', serif; font-size: 0.6rem; letter-spacing: 0.2em;
+    color: var(--amber); text-transform: uppercase; opacity: 0.65; margin-bottom: 2rem;
+  }
+  .sense-dot {
+    width: 5px; height: 5px; border-radius: 50%; background: var(--amber);
+    animation: sensePulse 2.5s ease-in-out infinite;
+  }
+  @keyframes sensePulse {
+    0%, 100% { opacity: 0.25; transform: scale(0.8); }
+    50% { opacity: 1; transform: scale(1.2); }
+  }
+
+  .narrative { line-height: 2.05; font-size: 1.05rem; color: var(--paper); margin-bottom: 2.5rem; min-height: 100px; transition: opacity 0.4s; }
+  .narrative p { margin-bottom: 1.2em; }
+  .narrative em { color: var(--mist); }
+  .narrative strong { color: var(--amber); font-weight: normal; font-style: italic; }
+  .narrative .reading-passage {
+    border-left: 2px solid rgba(200,132,42,0.35); padding-left: 1.3rem;
+    color: var(--mist); margin: 1.5em 0; font-style: italic; line-height: 1.9;
+  }
+
+  .choices-label { font-family: 'Cinzel', serif; font-size: 0.6rem; letter-spacing: 0.35em; color: var(--brass-dim); text-transform: uppercase; margin-bottom: 1rem; }
+  .choices { display: flex; flex-direction: column; gap: 0.7rem; }
+
+  .choice-btn {
+    background: transparent; border: 1px solid rgba(184,148,58,0.22);
+    color: var(--paper); font-family: 'IM Fell English', serif; font-size: 0.95rem;
+    line-height: 1.65; padding: 1rem 1.4rem; text-align: left; cursor: pointer;
+    transition: all 0.22s; position: relative; overflow: hidden;
+  }
+  .choice-btn::before {
+    content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 2px;
+    background: var(--amber); transform: scaleY(0); transition: transform 0.22s;
+  }
+  .choice-btn:hover { border-color: rgba(184,148,58,0.55); background: rgba(200,132,42,0.04); padding-left: 1.9rem; }
+  .choice-btn:hover::before { transform: scaleY(1); }
+  .choice-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+  .choice-btn .choice-hint { display: block; font-size: 0.82rem; color: var(--brass-dim); font-style: italic; margin-top: 0.25rem; }
+
+  .permanent-marker {
+    color: var(--permanent); font-size: 0.85em; margin-left: 0.4rem;
+    position: relative; cursor: help;
+  }
+  .permanent-marker::after {
+    content: 'This choice cannot be undone.';
+    position: absolute; bottom: 1.6em; left: 50%; transform: translateX(-50%);
+    background: var(--navy-mid); border: 1px solid var(--brass-dim);
+    color: var(--mist); font-size: 0.75rem; font-style: italic; font-family: 'IM Fell English', serif;
+    white-space: nowrap; padding: 0.4rem 0.7rem; pointer-events: none;
+    opacity: 0; transition: opacity 0.2s; letter-spacing: 0; z-index: 10;
+  }
+  .permanent-marker:hover::after { opacity: 1; }
+
+  /* ── OVERLAYS ── */
+  .overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(8,18,30,0.94); z-index: 100;
+    align-items: center; justify-content: center; padding: 1.5rem;
+    overflow-y: auto;
+  }
+  .overlay.active { display: flex; }
+
+  .overlay-panel {
+    background: var(--navy-mid); border: 1px solid var(--brass-dim);
+    max-width: 560px; width: 100%; padding: 2.5rem; position: relative;
+    max-height: 90vh; overflow-y: auto;
+  }
+  .overlay-panel::before {
+    content: ''; position: absolute; inset: 6px; border: 1px solid rgba(184,148,58,0.1); pointer-events: none;
+  }
+  .overlay-title { font-family: 'Cinzel', serif; font-size: 0.7rem; letter-spacing: 0.45em; color: var(--brass); text-transform: uppercase; text-align: center; margin-bottom: 2rem; }
+  .overlay-close {
+    position: absolute; top: 1rem; right: 1rem; background: transparent; border: none;
+    color: var(--brass-dim); font-family: 'Cinzel', serif; font-size: 0.6rem; letter-spacing: 0.2em;
+    cursor: pointer; text-transform: uppercase; padding: 0.3rem 0.5rem; transition: color 0.2s;
+  }
+  .overlay-close:hover { color: var(--brass); }
+
+  /* Stats */
+  .stat-group { margin-bottom: 2rem; }
+  .stat-group-label { font-family: 'Cinzel', serif; font-size: 0.6rem; letter-spacing: 0.3em; color: var(--brass-dim); text-transform: uppercase; margin-bottom: 1rem; }
+  .stat-row { margin-bottom: 1rem; }
+  .stat-name { font-size: 0.85rem; color: var(--mist); margin-bottom: 0.3rem; display: flex; justify-content: space-between; }
+  .stat-name span { color: var(--brass); font-family: 'Cinzel', serif; font-size: 0.75rem; }
+  .stat-bar { height: 3px; background: rgba(255,255,255,0.08); border-radius: 2px; overflow: hidden; }
+  .stat-fill { height: 100%; border-radius: 2px; transition: width 0.6s ease; }
+  .fill-cover { background: linear-gradient(to right, var(--brass-dim), var(--brass)); }
+  .fill-root { background: linear-gradient(to right, #3a5a2a, #6a9a4a); }
+  .fill-expose { background: linear-gradient(to right, #3a2a1a, var(--amber)); }
+  .fill-suspicion { background: linear-gradient(to right, var(--brass-dim), var(--rust)); }
+  .fill-trust { background: linear-gradient(to right, var(--brass-dim), var(--green-dim)); }
+
+  .npc-row { margin-bottom: 1.2rem; }
+  .npc-name { font-size: 0.85rem; color: var(--mist); margin-bottom: 0.4rem; }
+  .npc-bars { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem 1rem; }
+  .npc-bar-label { font-size: 0.72rem; color: var(--brass-dim); font-style: italic; margin-bottom: 0.2rem; }
+  .stat-note { font-size: 0.8rem; font-style: italic; color: var(--brass-dim); margin-top: 1.5rem; line-height: 1.7; }
+
+  /* Ledger */
+  .ledger-entry-view { border-bottom: 1px solid rgba(184,148,58,0.1); padding-bottom: 1.2rem; margin-bottom: 1.2rem; }
+  .ledger-q { font-style: italic; color: var(--mist); font-size: 0.9rem; line-height: 1.7; margin-bottom: 0.5rem; }
+  .ledger-a { font-size: 0.88rem; color: var(--paper); line-height: 1.6; display: flex; gap: 0.8rem; align-items: baseline; }
+  .ledger-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; margin-top: 6px; }
+  .dot-hate { background: var(--rust); }
+  .dot-endure { background: var(--brass-dim); }
+  .dot-survive { background: var(--green-dim); }
+  .dot-love { background: var(--blue-dim); }
+  .ledger-effects { font-size: 0.75rem; font-family: 'Cinzel', serif; color: var(--brass-dim); margin-top: 0.3rem; margin-left: 1.4rem; letter-spacing: 0.05em; }
+  .ledger-empty { font-style: italic; color: var(--brass-dim); font-size: 0.9rem; text-align: center; padding: 1rem 0; }
+
+  /* Ledger moment */
+  .ledger-moment-title { font-family: 'Cinzel', serif; font-size: 0.65rem; letter-spacing: 0.4em; color: var(--brass); text-transform: uppercase; text-align: center; margin-bottom: 0.5rem; }
+  .ledger-moment-q { font-style: italic; color: var(--mist); text-align: center; font-size: 1rem; line-height: 1.8; margin-bottom: 2rem; padding: 0 0.5rem; }
+  .ledger-options { display: flex; flex-direction: column; gap: 0.5rem; }
+  .ledger-opt {
+    background: transparent; border: 1px solid transparent; padding: 0.85rem 1.2rem;
+    text-align: left; cursor: pointer; font-family: 'IM Fell English', serif;
+    font-size: 0.9rem; line-height: 1.6; color: var(--paper); transition: all 0.2s;
+    display: flex; align-items: baseline; gap: 1rem;
+  }
+  .ledger-opt-num { font-family: 'Cinzel', serif; font-size: 0.6rem; letter-spacing: 0.1em; opacity: 0.5; flex-shrink: 0; min-width: 18px; }
+  .ledger-opt:hover { border-color: rgba(184,148,58,0.3); background: rgba(200,132,42,0.04); }
+  .ledger-opt.opt-hate:hover { border-color: rgba(139,58,42,0.4); }
+  .ledger-opt.opt-endure:hover { border-color: rgba(122,98,37,0.4); }
+  .ledger-opt.opt-survive:hover { border-color: rgba(58,90,42,0.4); }
+  .ledger-opt.opt-love:hover { border-color: rgba(42,74,106,0.4); }
+
+  /* ── END SCREEN ── */
+  #screen-end {
+    min-height: 100vh; justify-content: flex-start;
+    padding: 3rem 1.5rem 5rem; position: relative; z-index: 1;
+  }
+  .end-wrap { max-width: 620px; width: 100%; }
+  .end-ornament { font-family: 'Cinzel Decorative', serif; font-size: 0.65rem; letter-spacing: 0.5em; color: var(--brass-dim); text-align: center; margin-bottom: 1.5rem; text-transform: uppercase; }
+  .end-title { font-family: 'Cinzel', serif; font-size: 1.3rem; color: var(--brass); text-align: center; margin-bottom: 0.4rem; }
+  .end-subtitle { font-family: 'Cinzel', serif; font-size: 0.65rem; letter-spacing: 0.3em; color: var(--brass-dim); text-align: center; text-transform: uppercase; margin-bottom: 3rem; }
+  .end-rule { width: 120px; height: 1px; background: linear-gradient(to right, transparent, var(--brass), transparent); margin: 0 auto 3rem; }
+  .end-section-title { font-family: 'Cinzel', serif; font-size: 0.65rem; letter-spacing: 0.4em; color: var(--brass); text-transform: uppercase; margin-bottom: 1.5rem; }
+  .end-closing { font-style: italic; color: var(--mist); font-size: 1rem; line-height: 2; margin-bottom: 3rem; }
+
+  .save-block { margin-bottom: 3rem; }
+  .save-label { font-family: 'Cinzel', serif; font-size: 0.6rem; letter-spacing: 0.3em; color: var(--brass-dim); text-transform: uppercase; margin-bottom: 0.8rem; }
+  .save-note-sm { font-style: italic; font-size: 0.85rem; color: var(--brass-dim); margin-bottom: 1rem; line-height: 1.7; }
+  .save-textarea {
+    width: 100%; height: 80px; background: rgba(0,0,0,0.2); border: 1px solid var(--brass-dim);
+    color: var(--mist); font-family: monospace; font-size: 0.7rem; padding: 0.8rem;
+    resize: none; outline: none; line-height: 1.5;
+  }
+  .copy-btn {
+    margin-top: 0.6rem; font-family: 'Cinzel', serif; font-size: 0.65rem; letter-spacing: 0.25em;
+    text-transform: uppercase; background: transparent; border: 1px solid var(--brass-dim);
+    color: var(--brass-dim); padding: 0.5rem 1.2rem; cursor: pointer; transition: all 0.2s;
+  }
+  .copy-btn:hover { border-color: var(--brass); color: var(--brass); }
+
+  .next-chapter-btn {
+    font-family: 'Cinzel', serif; font-size: 0.75rem; letter-spacing: 0.3em; text-transform: uppercase;
+    background: transparent; border: 1px solid rgba(184,148,58,0.15); color: var(--brass-dim);
+    padding: 1rem 2.5rem; cursor: not-allowed; opacity: 0.4; display: block; text-align: center; margin-top: 2rem;
+  }
+
+  /* Animations */
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+  .fade-up { animation: fadeUp 0.5s ease forwards; }
+
+  .attribution {
+    position: fixed; bottom: 1rem; right: 1.5rem;
+    font-family: 'Cinzel', serif; font-size: 0.5rem; letter-spacing: 0.2em;
+    color: var(--brass-dim); opacity: 0.35; text-transform: uppercase; z-index: 10;
+  }
+
+  ::-webkit-scrollbar { width: 3px; }
+  ::-webkit-scrollbar-track { background: var(--navy); }
+  ::-webkit-scrollbar-thumb { background: var(--brass-dim); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<!-- ── LOAD SCREEN ── -->
+<div class="screen active" id="screen-load">
+  <div class="load-panel" style="position:relative;z-index:1;padding:4rem 1.5rem;text-align:center;">
+    <div class="title-ornament">❧ &nbsp; ❧ &nbsp; ❧</div>
+    <h1 class="title-main">The Weight of<br>Borrowed Names</h1>
+    <div class="title-sub">Chapter Two · The Second Day</div>
+    <div class="title-rule"></div>
+
+    <!-- Continue from autosave -->
+    <div id="load-continue" style="display:none;">
+      <p class="load-premise">A session from Chapter Two was found. You may continue where you left off, or begin the chapter again.</p>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:0.8rem;">
+        <button class="btn-primary" onclick="loadCh2Save()">Continue</button>
+        <button class="btn-secondary" onclick="showLoadFromString()">Begin Again</button>
+      </div>
+    </div>
+
+    <!-- Load from ch1 save or start fresh -->
+    <div id="load-options" style="display:none;">
+      <p class="load-premise">Paste your save string from the end of the Prologue to carry your choices forward — or begin Chapter Two without one.</p>
+      <div class="load-label" style="text-align:left;margin-bottom:0.5rem;">Save string from the Prologue</div>
+      <textarea id="save-paste" class="save-paste" placeholder="Paste save string here…"></textarea>
+      <div class="error-inline" id="load-error"></div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:0.8rem;margin-top:0.8rem;">
+        <button class="btn-primary" onclick="loadFromString()">Load Save &amp; Begin</button>
+        <div class="load-divider">or</div>
+        <button class="btn-secondary" onclick="startFresh()">Begin Without Save</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── FLOATING BUTTONS ── -->
+<div class="float-buttons" id="float-buttons" style="display:none;">
+  <button class="float-btn" onclick="showStatsOverlay()">Stats</button>
+  <button class="float-btn" onclick="showLedgerOverlay()">Ledger</button>
+</div>
+
+<!-- ── GAME SCREEN ── -->
+<div class="screen" id="screen-game">
+  <div class="game-wrap" style="position:relative;z-index:1;">
+    <div class="chapter-header">
+      <div class="chapter-label" id="chapterLabel">Chapter Two</div>
+      <div class="chapter-title" id="chapterTitle">The House on Vane Street</div>
+    </div>
+    <div class="sense-indicator">
+      <span class="sense-dot"></span>
+      <span id="senseLabel">Reading sense: active</span>
+    </div>
+    <div class="narrative fade-up" id="narrative"></div>
+    <div id="choices-wrap" style="display:none;">
+      <div class="choices-label">What do you do?</div>
+      <div class="choices" id="choices"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── END SCREEN ── -->
+<div class="screen" id="screen-end">
+  <div class="end-wrap" style="position:relative;z-index:1;">
+    <div class="end-ornament">End of Chapter Two</div>
+    <h2 class="end-title">The Weight of Borrowed Names</h2>
+    <div class="end-subtitle">Caldenmere — The House on Vane Street</div>
+    <div class="end-rule"></div>
+    <p class="end-closing" id="endClosing"></p>
+
+    <div style="margin-bottom:3rem;">
+      <div class="end-section-title">What You Carry</div>
+      <div id="end-stats"></div>
+    </div>
+    <div style="margin-bottom:3rem;">
+      <div class="end-section-title">The Ledger</div>
+      <div id="end-ledger"></div>
+    </div>
+
+    <div class="save-block">
+      <div class="save-label">Save State</div>
+      <p class="save-note-sm">Copy this string to carry your choices into Chapter Three when it becomes available.</p>
+      <textarea class="save-textarea" id="saveString" readonly></textarea>
+      <button class="copy-btn" onclick="copySave()">Copy to Clipboard</button>
+    </div>
+
+    <button class="next-chapter-btn">Chapter Three — Coming Soon</button>
+    <button class="btn-primary" style="display:block;margin:1.5rem auto 0;width:fit-content;" onclick="replayChapter()">Begin Chapter Two Again</button>
+  </div>
+</div>
+
+<!-- ── STATS OVERLAY ── -->
+<div class="overlay" id="overlay-stats">
+  <div class="overlay-panel">
+    <button class="overlay-close" onclick="closeOverlay('overlay-stats')">Close</button>
+    <div class="overlay-title">What You Are, At Present</div>
+    <div id="stats-content"></div>
+  </div>
+</div>
+
+<!-- ── LEDGER VIEW OVERLAY ── -->
+<div class="overlay" id="overlay-ledger-view">
+  <div class="overlay-panel">
+    <button class="overlay-close" onclick="closeOverlay('overlay-ledger-view')">Close</button>
+    <div class="overlay-title">The Inner Ledger</div>
+    <div id="ledger-view-content"></div>
+  </div>
+</div>
+
+<!-- ── LEDGER MOMENT OVERLAY ── -->
+<div class="overlay" id="overlay-ledger-moment">
+  <div class="overlay-panel">
+    <div class="ledger-moment-title">The Inner Ledger</div>
+    <p class="ledger-moment-q" id="ledger-moment-q"></p>
+    <div class="ledger-options" id="ledger-moment-opts"></div>
+  </div>
+</div>
+
+<div class="attribution">Caldenmere · Year of the Amber Tide</div>
+
+<script>
+// ──────────────────────────────────────────────
+// GAME STATE
+// ──────────────────────────────────────────────
+let gs = {
+  playerName: 'the reader',
+  sealOrigin: null,
+  senseType: null,
+  playerWant: null,
+  stats: { coverIntegrity: 60, rootedness: 20, readingExposure: 0 },
+  npcs: {
+    pell:  { suspicion: 20, trust: 40 },
+    maren: { suspicion: 60, trust: 10 },
+    efa:   { suspicion: 20, trust: 30 },
+    idris: { suspicion: 40, trust: 20 }
+  },
+  ledger: [],
+  choiceHistory: [],
+  flags: {},
+  currentScene: null,
+  pendingLedger: null
+};
+
+function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+
+function applyEffects(effects) {
+  if (!effects) return;
+  const statMap = {
+    coverIntegrity:  ['stats', 'coverIntegrity'],
+    rootedness:      ['stats', 'rootedness'],
+    readingExposure: ['stats', 'readingExposure'],
+    pellSuspicion:   ['npcs', 'pell', 'suspicion'],
+    pellTrust:       ['npcs', 'pell', 'trust'],
+    marenSuspicion:  ['npcs', 'maren', 'suspicion'],
+    marenTrust:      ['npcs', 'maren', 'trust'],
+    efaSuspicion:    ['npcs', 'efa', 'suspicion'],
+    efaTrust:        ['npcs', 'efa', 'trust'],
+    idrisSuspicion:  ['npcs', 'idris', 'suspicion'],
+    idrisTrust:      ['npcs', 'idris', 'trust'],
+  };
+  for (const [key, val] of Object.entries(effects)) {
+    const path = statMap[key];
+    if (!path) continue;
+    if (path.length === 2) gs[path[0]][path[1]] = clamp(gs[path[0]][path[1]] + val, 0, 100);
+    else if (path.length === 3) gs[path[0]][path[1]][path[2]] = clamp(gs[path[0]][path[1]][path[2]] + val, 0, 100);
+  }
+}
+
+function effectsToString(effects) {
+  if (!effects || Object.keys(effects).length === 0) return '';
+  const labels = {
+    coverIntegrity: 'Cover', rootedness: 'Rootedness', readingExposure: 'Exposure',
+    pellSuspicion: 'Pell Suspicion', pellTrust: 'Pell Trust',
+    marenSuspicion: 'Maren Suspicion', marenTrust: 'Maren Trust',
+    efaSuspicion: 'Efa Suspicion', efaTrust: 'Efa Trust',
+    idrisSuspicion: 'Idris Suspicion', idrisTrust: 'Idris Trust'
+  };
+  return Object.entries(effects).map(([k,v]) => {
+    const label = labels[k] || k;
+    return `${label} ${v > 0 ? '+' : ''}${v}`;
+  }).join(' · ');
+}
+
+// ──────────────────────────────────────────────
+// SCENES
+// ──────────────────────────────────────────────
+const scenes = {
+
+  morning_wake: {
+    label: 'Chapter Two', title: 'What the House Kept While You Slept',
+    narrative: `<p>The room kept its hours while you slept. Not your room — you knew that before you opened your eyes; the mattress is different, the quality of the silence is different, and the reading sense, which you have spent years training to hold quiet, apparently decided that sleep counts as permission.</p>
+<p>It ran all night.</p>
+<p>Not visions, exactly. Something slower: the house's accumulated years pressing in at the edges of your sleep like cold water at the margins of a door. A child's quick footsteps on the same boards you walked last night. A woman's breathing, long familiar with this ceiling. The residue of a grief that had twenty years to resolve itself into simple absence.</p>
+<p>You are in Tessaly Aldane's room. She slept here from the age of three until she was seventeen, and the room knows the shape of her quite well.</p>
+<p>It has been evaluating, all night, whether you are a convincing substitute.</p>
+<p>The wardrobe stands open as you left it last night. Her clothes: sober, practical, a little worn at the cuffs. The morning light makes them look more real than they did by lamplight, which is either encouraging or alarming depending on what you need it to be.</p>`,
+    choices: [
+      {
+        text: 'Touch something before you\'ve finished waking.',
+        hint: 'the reading sense is already present — you might as well open to it',
+        permanent: true,
+        effects: { readingExposure: 12 },
+        next: 'morning_read'
+      },
+      {
+        text: 'Lie still. Let the house finish its assessment.',
+        hint: 'controlled — you have always been better at waiting than at acting',
+        permanent: false,
+        effects: { rootedness: 4 },
+        next: 'morning_still'
+      },
+      {
+        text: 'Get up. The day doesn\'t care whether you\'re ready.',
+        hint: 'practical — you have never been someone who waits for permission',
+        permanent: false,
+        effects: { coverIntegrity: 3 },
+        next: 'morning_dress'
+      }
+    ]
+  },
+
+  morning_read: {
+    label: 'Chapter Two', title: 'The Table\'s Account',
+    narrative: `<p>The nearest thing to your hand is a small book on the bedside table — a journal, empty, the pages still waiting. Your fingers are on the cover before you have decided to move.</p>
+<div class="reading-passage"><p>Not the journal's memory. The table's: a sequence of mornings compressed into impression. A girl sitting here and reaching for this book and not writing in it — day after day, year after year, the impulse arriving and not resolving. What she wanted to say and kept not saying. Not absence. The precise shape of held-back things.</p></div>
+<p>You put your hand flat on the table and breathe until the reading closes.</p>
+<p>She had this sense too, you think. Not necessarily — you have no evidence — but the way the house opens to you has the particular ease of a place that has been listened to before. Not for years. Not since she was seventeen. But it knows what to do when someone with the reading gift is present, and it has been waiting for the chance to do it again.</p>
+<p>You lie still for another few minutes, listening to the house think around you. Then you get up.</p>`,
+    hasLedger: true,
+    ledger: {
+      question: 'The room reached for you before you were awake enough to decide. What do you make of that?',
+      options: [
+        'That this sense of mine is a liability I need to take more seriously.',
+        'That the house has been waiting. Not for Tessaly specifically — for someone who can hear it.',
+        'That I\'m more porous than I thought. Noted, and managed.',
+        'That I wanted to know. Even in sleep, I wanted to know. That\'s simply who I am.'
+      ],
+      sentiments: ['hate', 'endure', 'survive', 'love'],
+      effects: [
+        { coverIntegrity: 3 },
+        { rootedness: 6 },
+        { coverIntegrity: 2, readingExposure: -3 },
+        { rootedness: 4, readingExposure: 4 }
+      ],
+      next: 'morning_dress'
+    },
+    choices: []
+  },
+
+  morning_still: {
+    label: 'Chapter Two', title: 'The Art of Waiting',
+    narrative: `<p>You don't move.</p>
+<p>The house continues around you. Somewhere below: a door, careful footsteps on stone, the particular rhythm of a morning that has run the same way for years. The cook, Efa, begins early — you remember this from Pell's briefing, and you remember it better now as an actual sound, as a real person in a real kitchen doing real work.</p>
+<p>The reading sense quiets as you hold still. Not gone, but settling — responding, as it always does, to the direction of your attention. You have learned this over years: it amplifies what you reach for. Stillness calms it. Waiting is a kind of closing.</p>
+<p>By the time the light shifts from grey to pale gold, you have a working outline of what the room carries: not a detailed account, but an impression. Where the old grief was concentrated. Where it went ordinary and domestic. Where something that might have been happiness had been briefly, and then wasn't.</p>
+<p>You know things about Tessaly Aldane that Harwick Pell doesn't know.</p>
+<p>You file them, and get up.</p>`,
+    choices: [{ text: 'Continue.', hint: null, permanent: false, effects: {}, next: 'morning_dress' }]
+  },
+
+  morning_dress: {
+    label: 'Chapter Two', title: 'The Performance Begins',
+    narrative: `<p>Her clothes fit close enough.</p>
+<p>Not exactly — the shoulders run slightly wide; you adjust. The hem assumes a slightly different height. The practical boots are very nearly your size, which you are choosing not to read into. The blue coat rather than the brown one, which would have carried a weight you're not ready to examine.</p>
+<p>The mirror gives you back something almost convincing.</p>
+<p><em>The shoulders</em>, you think. <em>Maren will notice the shoulders.</em> And then, immediately: <em>Maren notices everything.</em></p>
+<p>You are as ready as you are going to be. The day has already begun without your permission, and you had better begin with it.</p>`,
+    choices: [{ text: 'Go downstairs.', hint: null, permanent: false, effects: {}, next: 'morning_room' }]
+  },
+
+  morning_room: {
+    label: 'Chapter Two', title: 'The Morning Room',
+    narrative: `<p>Efa has set the breakfast things without being asked.</p>
+<p>The morning room is small, south-facing, warmer than the rest of the house in winter. It smells of coal and bread and something herbal you don't have a name for. The table is set for one — correctly, which means she knew you would come down alone, which means she knows this household's rhythms well enough to predict a stranger. Worth noting.</p>
+<p>She is at the range when you enter and turns at the sound of your step. Her face carries the particular warmth of someone for whom feeding people is easier than telling them how they feel. She holds it almost steadily.</p>
+<p>"Good morning, Miss Aldane." She doesn't quite meet your eyes directly. Giving you room. "I wasn't certain what you preferred, so I've done the usual."</p>
+<p>The usual: toast, soft-boiled eggs, a pot of something dark that resolves into very strong tea. The bread basket carries, in the reading sense, the ghost of four hundred identical mornings. Not unhappy ones. Just mornings, doing their work.</p>
+<p>"I hope the room was comfortable," she adds, still at a careful distance. Giving you the option to answer or not.</p>`,
+    choices: [
+      {
+        text: '"It was. I\'d forgotten how this house sounds at night."',
+        hint: 'honest, reaching toward something — it lands if she\'s willing to catch it',
+        permanent: false,
+        effects: { rootedness: 5, efaTrust: 6 },
+        next: 'morning_efa_warm'
+      },
+      {
+        text: '"Well enough, thank you." Polite. Minimal.',
+        hint: 'professional — you are managing the distance deliberately',
+        permanent: false,
+        effects: { coverIntegrity: 3 },
+        next: 'morning_efa_polite'
+      },
+      {
+        text: 'Ask her how long she\'s been at the house.',
+        hint: 'curious — you want to understand who knows what about this household',
+        permanent: false,
+        effects: { efaTrust: 4, efaSuspicion: -5 },
+        next: 'morning_efa_ask'
+      }
+    ]
+  },
+
+  morning_efa_warm: {
+    label: 'Chapter Two', title: 'What the House Sounds Like',
+    narrative: `<p>"It was." You set down your cup. "I'd forgotten how this house sounds at night. The harbour coming in through the walls."</p>
+<p>Something in Efa's posture softens — barely, but the reading sense catches it before you would have seen it otherwise. Recognition. The specific relief of someone who was prepared to be managed and is instead being spoken to honestly.</p>
+<p>"It does," she says. "And the third stair creaks." She moves a dish closer to your end of the table without appearing to think about it — the reflex of someone who tends to the people around her the way a plant tends toward light. "I keep meaning to have it fixed. I never do."</p>
+<p>She hesitates. Then, as if offering something she wasn't quite planning to: "I'm glad you're back, Miss Aldane."</p>
+<p>She means it exactly. You understand that she means it exactly, and also that it is addressed to a person you are impersonating, and also that the warmth of it lands on you anyway, in spite of everything.</p>
+<p>She turns back to the range before either of you has to decide what to do with that.</p>`,
+    choices: [{ text: 'Finish breakfast.', hint: null, permanent: false, effects: {}, next: 'pre_maren' }]
+  },
+
+  morning_efa_polite: {
+    label: 'Chapter Two', title: 'Professional Distance',
+    narrative: `<p>"Well enough, thank you."</p>
+<p>She sets the teapot within your reach and withdraws to a professional distance.</p>
+<p>Polite. Correct. The morning proceeds in an orderly fashion.</p>
+<p>The bread is very good. The eggs are exactly done. She knows her work and performs it without requiring acknowledgment, which is either the mark of someone comfortable in their position or someone who has learned not to expect it.</p>
+<p>You think: <em>she will be easier to manage than Maren.</em> And then, immediately, you dislike yourself, briefly, for framing it that way. She is a person in a difficult house who has been lonely there for two years, and that is not a management problem.</p>
+<p>You finish your tea without correcting the thought further. Some mornings the best you can do is notice.</p>`,
+    choices: [{ text: 'Finish breakfast.', hint: null, permanent: false, effects: {}, next: 'pre_maren' }]
+  },
+
+  morning_efa_ask: {
+    label: 'Chapter Two', title: 'Years and Years',
+    narrative: `<p>"Two years in March." She says it with the mild steadiness of someone who has stayed in a place others have found difficult. "Mr. Aldane engaged me after — after things became more complicated." A careful circumlocution for his illness; she uses it easily, which means she has used it often.</p>
+<p>She glances at you sidelong. "You were here briefly, in the autumn before last. I was very new then." A pause. "I don't think we —"</p>
+<p>"We didn't speak much," you finish for her. Which is not a lie in any sense that could currently be verified.</p>
+<p>"No." She considers something for a moment, turning it over. "But I remembered you."</p>
+<p>You hold her gaze when she finally looks at you directly. She is looking for something — not suspicion exactly. Something more like confirmation. The reading sense finds, in the careful warmth of her hands on the pot, the particular loneliness of someone who has been hoping, for two years, for a different kind of house.</p>
+<p>"I'm glad you came back," she says.</p>`,
+    choices: [{ text: 'Finish breakfast.', hint: null, permanent: false, effects: {}, next: 'pre_maren' }]
+  },
+
+  pre_maren: {
+    label: 'Chapter Two', title: 'Three O\'Clock',
+    narrative: `<p>Maren finds you in the morning room before you have finished your tea.</p>
+<p>This is deliberate, you're fairly certain. She stands in the doorway with the manner of someone who has organized her thoughts carefully and arrived with them ready.</p>
+<p>"I thought we might speak this afternoon, Miss Aldane, when you've had more time to settle." A brief pause. "There are estate matters that will require your attention. Mr. Pell has written with some questions about the documents." Another pause, slightly shorter. "And I have a few questions of my own, if you don't mind."</p>
+<p>She said this at dinner last night. <em>I have a few questions.</em> She announced it the way someone announces they have already decided the answer — the questions are a formality, but they are a formal one, and she intends to conduct them correctly.</p>
+<p>"Three o'clock?" she says. It is not quite a suggestion.</p>`,
+    choices: [
+      {
+        text: '"Of course. Three o\'clock."',
+        hint: 'agreeable — you give her what she asked for and watch what she does with it',
+        permanent: false,
+        effects: { pellTrust: 3, marenSuspicion: -5 },
+        next: 'pre_maren_agree'
+      },
+      {
+        text: '"I\'d rather this morning, if it\'s the same to you."',
+        hint: 'counter-scheduling — you want to control the timing, see how she responds',
+        permanent: false,
+        effects: { coverIntegrity: 4, marenSuspicion: 5 },
+        next: 'pre_maren_push'
+      },
+      {
+        text: '"Certainly. I\'d like to walk the house first."',
+        hint: 'deliberate — you want to learn what you can before she asks her questions',
+        permanent: false,
+        effects: { rootedness: 5, readingExposure: 5 },
+        next: 'pre_maren_walk'
+      }
+    ]
+  },
+
+  pre_maren_agree: {
+    label: 'Chapter Two', title: 'Until Three',
+    narrative: `<p>"Three o'clock," you confirm.</p>
+<p>She nods once, precise, and withdraws without thanking you. She doesn't thank you for agreeing to things she was going to do regardless.</p>
+<p>You pour the last of the tea and allow yourself five minutes in which you are simply someone sitting in a warm room, not performing anything for anyone. The garden is visible through the morning-room window: overgrown, going to seed, beautiful in the winter-spare way of things that haven't been attended to in some time. The reading sense finds, at the edge of the glass, the ghost of someone who loved this garden once with the particular absorption of someone who needed somewhere to put their attention.</p>
+<p>The garden, and then not the garden. That is all the reading sense gives you.</p>
+<p>You think about three o'clock. You think about the key that was not on Pell's ring.</p>`,
+    choices: [{ text: 'Continue.', hint: null, permanent: false, effects: {}, next: 'idris_arrival' }]
+  },
+
+  pre_maren_push: {
+    label: 'Chapter Two', title: 'Counter-Scheduling',
+    narrative: `<p>"I'd rather this morning, if it's the same to you."</p>
+<p>Something moves in Maren's expression. Barely, but you are watching for exactly this.</p>
+<p>"This morning," she repeats.</p>
+<p>"If it's the same to you." You keep your voice mild. "The afternoon light in this house — I find I don't work well in it." You have no idea whether this is true of Tessaly. You are betting that Maren doesn't know either, and that she will file it as information rather than a tell.</p>
+<p>A beat. She files it somewhere you cannot see.</p>
+<p>"Eleven o'clock, then," she says.</p>
+<p>"Eleven o'clock," you agree.</p>
+<p>When she's gone, you breathe carefully. That was a small test — possibly hers, possibly yours — and you passed it or failed it and won't know which until eleven.</p>`,
+    choices: [{ text: 'Continue.', hint: null, permanent: false, effects: {}, next: 'idris_arrival' }]
+  },
+
+  pre_maren_walk: {
+    label: 'Chapter Two', title: 'The House in the Morning',
+    narrative: `<p>"Certainly. I'd like to walk the house first — take stock before we sit down together."</p>
+<p>Maren's expression shifts: the particular stillness of someone recalibrating after an unexpected answer.</p>
+<p>"Of course," she says, after a beat that is one beat too long to be entirely comfortable. "Three o'clock. I'll have the relevant documents in order."</p>
+<p>You walk the house.</p>
+<div class="reading-passage"><p>The hallway past the morning room carries old business — the residue of transactions, the feeling of a household that ran itself efficiently and without warmth. The study door is locked; you stop at it with your hand not quite touching the wood and feel the lock hold something deliberate. Not simply secured. Chosen and maintained. The upper hallway is quieter: a room at the end that belongs to no one, waiting for the person who should have inherited it — who is not you exactly, but who you are currently approximating.</p></div>
+<p>The house is learning the shape of your attention. By three o'clock, it will have learned more of yours than you've gathered of its.</p>`,
+    choices: [{ text: 'Continue.', hint: null, permanent: false, effects: {}, next: 'idris_arrival' }]
+  },
+
+  idris_arrival: {
+    label: 'Chapter Two', title: 'He Said She Was Here',
+    narrative: `<p>You are in the upper hallway, not yet ready to go down, when the sound of a key in the front door below resolves into footsteps — and then into Idris Aldane, who has let himself in with his own key and is removing his coat in the entrance hall with the ease of someone who has never questioned his right to be here.</p>
+<p>He sees you at the top of the stairs.</p>
+<p>Neither of you speaks for a moment. He has their father's posture — or rather, he has the posture of someone who has spent years deciding not to have it, and has not entirely succeeded. He looks up at you the way someone looks at a thing they were told to expect and are still not entirely ready for.</p>
+<p>"You're here," he says. Not a greeting. A verification.</p>
+<p>"I'm here," you agree.</p>
+<p>He holds your gaze for a beat too long. Then he hangs his coat with deliberate care — the gesture of a man who needs a moment to think, using an ordinary action to buy it.</p>
+<p>"I heard," he says to the coat hook, "that you were going to sell."</p>`,
+    choices: [
+      {
+        text: '"Where did you hear that?"',
+        hint: 'redirect — shift the frame from accusation to inquiry before he can press further',
+        permanent: false,
+        effects: { pellSuspicion: 5, idrisTrust: 5 },
+        next: 'idris_probe'
+      },
+      {
+        text: 'Say nothing. Let him continue.',
+        hint: 'patient — silence is often enough, at the customs house and elsewhere',
+        permanent: false,
+        effects: { coverIntegrity: 5 },
+        next: 'idris_wait'
+      },
+      {
+        text: '"I\'m still considering everything."',
+        hint: 'equivocal — it sounds like something she might have said',
+        permanent: false,
+        effects: { rootedness: 4, idrisTrust: 4 },
+        next: 'idris_says'
+      }
+    ]
+  },
+
+  idris_probe: {
+    label: 'Chapter Two', title: 'Where the Rumors Run',
+    narrative: `<p>"Where did you hear that?"</p>
+<p>He turns. The question has done what you intended: shifted the frame from accusation to inquiry, given you information about where the rumor is moving, and bought you a moment in which he is answering rather than pressing.</p>
+<p>"Pell's clerk. Who heard it from Pell, presumably." He studies you. "Is it true?"</p>
+<p>You hold his gaze. "I'm considering everything. That includes having the complete picture before making any decision." A pause. "I'd like that picture to include yours."</p>
+<p>Something in him settles — not satisfied, but recalibrated. He looks at you for a moment with an expression that is doing several things at once, and then he reaches into his coat pocket.</p>
+<p>"This arrived three weeks ago," he says. "Addressed to you. I signed for it." He holds a plain envelope out across the distance of the hallway. "Pell doesn't know I have it. I'm not certain why I kept it from him." He pauses. "That's not entirely true. I do know why."</p>`,
+    choices: [{ text: 'Cross the hallway. Take it.', hint: null, permanent: false, effects: {}, next: 'idris_letter' }]
+  },
+
+  idris_wait: {
+    label: 'Chapter Two', title: 'The Uses of Silence',
+    narrative: `<p>You say nothing.</p>
+<p>The silence is useful. You have learned this at the customs house over years of work: when someone has something to tell you, silence is frequently enough. You don't need to prompt. You need to wait, and to let the weight of the unfinished thing do the prompting for you.</p>
+<p>Idris looks at you — the long, flat look of someone deciding what kind of conversation this is going to be. Then he exhales, once, and reaches into his coat.</p>
+<p>"There was a letter," he says. "Arrived three weeks ago, addressed to you. I signed for it." He holds out a plain envelope. "I don't know why I kept it from Pell. Instinct, maybe."</p>
+<p>He says <em>instinct</em> the way someone says it when they mean something more specific and haven't found the right word for it yet.</p>`,
+    choices: [{ text: 'Cross the hallway. Take it.', hint: null, permanent: false, effects: {}, next: 'idris_letter' }]
+  },
+
+  idris_says: {
+    label: 'Chapter Two', title: 'A Thing She Used to Say',
+    narrative: `<p>"I'm still considering everything."</p>
+<p>He is quiet for a moment. Then, unexpectedly: "She used to say that." A pause that isn't a smile, but is adjacent to one. "When she'd already decided and wasn't ready to tell you yet."</p>
+<p>The observation lands without flourish. He's not performing the memory — just reporting it, the way you'd report a fact about the weather. You file it: he knew her. He is one of the few people in this house who did.</p>
+<p>He reaches into his coat pocket.</p>
+<p>"A letter arrived three weeks ago," he says. "Addressed to you. I signed for it." He produces a plain envelope — good paper, the handwriting precise. "Pell doesn't know I have it. I kept it without deciding to, and then I decided to keep it, and now I'm here."</p>`,
+    choices: [{ text: 'Cross the hallway. Take it.', hint: null, permanent: false, effects: {}, next: 'idris_letter' }]
+  },
+
+  idris_letter: {
+    label: 'Chapter Two', title: 'What He\'s Kept',
+    narrative: `<p>You cross the hallway and take it from him.</p>
+<p>The envelope is plain — good paper, no return address. Your name written carefully on the outside in a hand that has trained itself out of something more natural. The reading sense finds, at the edge of contact, a room with north-facing light: someone sitting very still, composing something they have been waiting a long time to send.</p>
+<p>"Do you know who it's from?" you ask.</p>
+<p>He is watching you receive it. "I have guesses." A pause. "There was a man, years ago — before she left, before any of this. Voss didn't approve of him. He also had dealings with father, the kind father didn't talk about." He meets your eyes with the particular steadiness of someone who has been holding this for a long time. "I was sixteen. I didn't understand the arrangement. But I know it didn't end when she left."</p>
+<p>You hold the envelope. Sealed. Addressed to Tessaly Aldane, three weeks ago, from whoever has been waiting to collect on Voss Aldane's debts.</p>
+<p>"Thank you," you say.</p>
+<p>He nods. "There's a room," he adds, "at the end of the upper hall. His study. The key was always kept separately." He says it the way you'd say something that has been sitting in you for a while. "I thought you should know that."</p>
+<p>You pocket the letter. Maren is expecting you at her hour, and she will be counting the minutes.</p>`,
+    choices: [{ text: 'Continue to the audit.', hint: null, permanent: false, effects: { idrisTrust: 5 }, next: 'maren_audit' }]
+  },
+
+  maren_audit: {
+    label: 'Chapter Two', title: 'The Housekeeper\'s Questions',
+    narrative: `<p>Maren's questions are prepared. You can tell by the arrangement: two chairs at a slight angle in the sitting room rather than opposite each other across a table — informal, or designed to feel informal, the effect of which is to remove the barrier between you without providing anything to put your hands on. The estate documents are on the low table, sorted into clear order. She has a list, though she doesn't consult it.</p>
+<p>"I'll be direct, Miss Aldane, if you don't mind." She says this as someone who will be direct regardless. "Your father's affairs are substantial, and the legal transfer will require your presence over the coming weeks. Mr. Pell has outlined the timeline." A pause. "I want to understand your intentions for the household."</p>
+<p>She asks, in careful sequence: the household budget, which you navigate by deferring to Pell's purview. The garden, where you say something about letting it rest through winter. Whether you intend to sell. Whether you plan to remain after the legal matters resolve.</p>
+<p>You answer each with the care of someone laying stones across uncertain ground — each one bearing weight, each one tested before committing to it.</p>
+<p>Then, almost casually, as if it had simply occurred to her:</p>
+<p>"Your father's study. I notice you haven't been in."</p>
+<p>She is watching your face when she says it. This was the question she was building toward from the beginning.</p>`,
+    choices: [
+      {
+        text: '"The key wasn\'t on the ring Mr. Pell provided."',
+        hint: 'honest, measured — you name the gap without explaining it',
+        permanent: false,
+        effects: { coverIntegrity: 4, marenTrust: 5, marenSuspicion: -5 },
+        next: 'maren_key'
+      },
+      {
+        text: '"I wanted to give it time."',
+        hint: 'vague but evocative — it might sound like something Tessaly would have said',
+        permanent: false,
+        effects: { rootedness: 5, marenSuspicion: -3 },
+        next: 'maren_time'
+      },
+      {
+        text: 'Let the reading sense open. Your hand rests on the chair arm.',
+        hint: 'permanent — she will see your face change, and she will know she saw it',
+        permanent: true,
+        effects: { readingExposure: 14, marenSuspicion: 8 },
+        next: 'maren_read'
+      }
+    ]
+  },
+
+  maren_key: {
+    label: 'Chapter Two', title: 'The Accounting of Keys',
+    narrative: `<p>"The key wasn't on the ring Mr. Pell provided."</p>
+<p>Maren is still for a moment — the particular stillness of someone who received an answer they weren't expecting and are adjusting for it.</p>
+<p>"No," she says. "He kept it separately." A beat. "I have it."</p>
+<p>She reaches into the pocket of her dress and produces a small iron key, older than the rest of the house's fittings, with the look of something that has been in personal keeping rather than on a hook. She places it on the table between you.</p>
+<p>"Your father left instructions," she says, carefully. "In the event that you returned." Her eyes hold yours. "There is a letter in the study. In the desk. He wrote it eighteen months ago, when he first became seriously unwell. He said it was for you." She pauses, and it costs her something to keep the pause even. "I haven't read it."</p>
+<p>You believe her. The reading sense doesn't contradict you, which is not the same as confirmation, but it's what you have.</p>
+<p>"Thank you," you say.</p>
+<p>She nods once. The key sits between you on the table, and the audit is finished, and something has been acknowledged that neither of you has named.</p>`,
+    choices: [{ text: 'Take the key.', hint: null, permanent: false, effects: {}, next: 'letter_surface' }]
+  },
+
+  maren_time: {
+    label: 'Chapter Two', title: 'The Art of Waiting',
+    narrative: `<p>"I wanted to give it time."</p>
+<p>Maren considers this. You watch her receive it — not entirely satisfied, but not pressing. She knows something about waiting. The house has it embedded in everything the reading sense touches here.</p>
+<p>"That's understandable," she says, after a moment that lasts exactly as long as it needs to. And then, with the specific care of someone choosing the right door: "Your father left something for you there. I've kept the key. I can give it to you whenever you're ready."</p>
+<p>You look at her. She holds the look without difficulty.</p>
+<p>"Now would be fine," you say.</p>
+<p>She reaches into her pocket and sets the key on the table between you.</p>
+<p>There is something she wants to tell you and isn't, you think — not from deception exactly, but from the careful containment of someone who has decided what's hers to say and what isn't. It's a distinction you recognize from years of working with people who know things and understand that knowing and saying are different acts.</p>`,
+    choices: [{ text: 'Take the key.', hint: null, permanent: false, effects: {}, next: 'letter_surface' }]
+  },
+
+  maren_read: {
+    label: 'Chapter Two', title: 'What the Chair Carries',
+    narrative: `<p>The reading sense has been pressing at the edges of your attention all through the audit. You let it open.</p>
+<p>The arm of the chair, where your hand rests. You don't move it.</p>
+<div class="reading-passage"><p>Maren's posture, repeated across many mornings — the quality of someone who keeps their own counsel as a professional practice. But underneath that, and more recently: an evening this year, winter light, someone in this chair who was not Maren. A man's hands, deliberate. A conversation in which one party says, quietly but without asking: <em>Tell me what comes for the estate when she returns.</em> And Maren's voice answering. Composed. Precise. Not refusing.</p></div>
+<p>You hold your hand very still.</p>
+<p>When you look up, Maren is watching your face with the exact attention of someone who has been watching for the last thirty seconds and is deciding what to do with what she saw.</p>
+<p>She does not ask what happened. She says instead, in a voice that is very carefully exactly the same as before: "The key is in my pocket, Miss Aldane. I'll give it to you when you'd like it."</p>
+<p>She gives it to you. The meeting ends. You leave, and both of you understand that considerably more has happened in this room than either of you will say.</p>`,
+    hasLedger: true,
+    ledger: {
+      question: 'The chair showed you that Maren answers to someone else. You cannot use that knowledge without revealing how you have it. What do you do with something you know and cannot say?',
+      options: [
+        'File it. Everything goes into the account eventually. The right moment will come.',
+        'Nothing yet. Knowing things I can\'t act on is a kind of helplessness I don\'t enjoy.',
+        'I hold it the way I\'ve always held what the reading sense gives me — carefully, quietly, waiting.',
+        'I find her more interesting now. And more dangerous. That is also useful.'
+      ],
+      sentiments: ['hate', 'endure', 'survive', 'love'],
+      effects: [
+        { coverIntegrity: 2, rootedness: 2 },
+        { rootedness: -2, readingExposure: 2 },
+        { coverIntegrity: 4 },
+        { rootedness: 4, readingExposure: 2 }
+      ],
+      next: 'letter_surface'
+    },
+    choices: []
+  },
+
+  letter_surface: {
+    label: 'Chapter Two', title: 'What Voss Aldane Left Behind',
+    narrative: `<p>The study smells of paper and old tobacco and something mineral and cold — not damp, exactly, but the specific quality of a room that has been sealed and has been keeping its own atmosphere.</p>
+<p>You cross the threshold.</p>
+<p>Voss Aldane was precise in his arrangements. The desk is cleared but not empty: papers in order, an inkwell sealed, a blotter that records the last few letters he wrote in faint mirror-script. He knew he was dying and he prepared in the manner of a man who had spent his life managing things he refused to feel directly.</p>
+<div class="reading-passage"><p>The reading sense opens the moment you cross the threshold — not in a flood, but in the way a room sometimes opens when it recognizes a particular kind of attention. The desk, at the edge of contact: a man writing here in the late afternoon of the last year of his life. Stopping and reconsidering. Burning two drafts before the third. Something he needed to say and kept not saying, until he said it and sealed it and left it for eighteen months without opening it again. The room was not waiting for Tessaly specifically. The room was waiting for someone who could hear it.</p></div>
+<p>The letter is in the third drawer. The seal is unbroken. <em>Tessaly Aldane</em> written on the outside in a hand that has begun to tremble slightly — not from fear. From time.</p>
+<p>You stand in the study and hold it.</p>`,
+    choices: [
+      {
+        text: 'Open it now.',
+        hint: 'permanent — you will know what it says, and you cannot unknow it',
+        permanent: true,
+        effects: { rootedness: 8, readingExposure: 6 },
+        next: 'letter_open'
+      },
+      {
+        text: 'Put it in your pocket. Not yet.',
+        hint: 'you are not ready, and you know it — the question is whether that\'s wisdom or avoidance',
+        permanent: false,
+        effects: { coverIntegrity: 5, rootedness: 3 },
+        next: 'letter_pocket'
+      }
+    ]
+  },
+
+  letter_open: {
+    label: 'Chapter Two', title: 'Three Drafts',
+    narrative: `<p>The seal breaks cleanly.</p>
+<p>Three paragraphs. The handwriting begins controlled and loosens as it continues — not from illness, but from the pressure of saying something that has been waiting a long time.</p>
+<p>He does not apologize. You notice this immediately: a man who wrote three drafts and burned two, and the surviving draft contains no apology.</p>
+<p>What it contains: an explanation of a transaction. Eighteen months ago, when his illness became undeniable, Voss Aldane made an arrangement with a party he names only as <em>the creditor.</em> The arrangement concerns the estate. It concerns, in terms he obscures without quite hiding, Tessaly herself — something she has, or is, or carries, that the creditor wants.</p>
+<p>He does not say what.</p>
+<p>He says: <em>Do not sign anything with Pell's name on it without understanding what it transfers.</em></p>
+<p>He says: <em>The house will tell you what I could not.</em></p>
+<p>And at the very end, in the handwriting that has gone unsteady: <em>I'm sorry I was not better at the parts that mattered.</em></p>
+<p>Three paragraphs. He wrote this and sealed it and left it for eighteen months without opening it again.</p>`,
+    hasLedger: true,
+    ledger: {
+      question: 'You read a dead man\'s three drafts. The third one doesn\'t have an apology — and then it does, at the end, in the hand that shook. What do you do with the part that was meant for her?',
+      options: [
+        'Set it aside. The warning is what matters. The rest is not mine to carry.',
+        'Let myself feel it for a moment. Someone should. She isn\'t here to.',
+        'Read it again. There\'s more in three paragraphs than one reading can hold.',
+        'Note it, and move on. I\'m not who it was written to, and that matters.'
+      ],
+      sentiments: ['hate', 'endure', 'survive', 'love'],
+      effects: [
+        { coverIntegrity: 3 },
+        { rootedness: 5 },
+        { rootedness: 3, readingExposure: 2 },
+        { coverIntegrity: 2, rootedness: 2 }
+      ],
+      next: 'night_close_read'
+    },
+    choices: []
+  },
+
+  letter_pocket: {
+    label: 'Chapter Two', title: 'Not Yet',
+    narrative: `<p>You put it in your coat pocket.</p>
+<p>The study stands around you, full of things it wants to tell you. The reading sense is running — it has been since you crossed the threshold — and you have not given it a deliberate surface to land on, which means it spreads thin across everything: the general shape of a man who managed things and kept things and chose, always, what to release and what to hold onto.</p>
+<p>General impression: this room holds a question that still needs answering. Not haunted. Pending. Something left unresolved with enough intention that the room knows the difference.</p>
+<p>You'll open it when you're ready. You are not ready today. You know yourself well enough to know that when you open it, you will need to be able to act on what it says — and you don't have enough of the picture yet.</p>
+<p>You lock the study behind you. You keep the key.</p>`,
+    choices: [{ text: 'Continue.', hint: null, permanent: false, effects: {}, next: 'night_close' }]
+  },
+
+  night_close: {
+    label: 'Chapter Two', title: 'The Second Night',
+    narrative: `<p>Dinner is quiet.</p>
+<p>Maren serves without ceremony. Idris doesn't appear for the meal; whether that's normal for him or pointed, you don't have enough baseline to say. Efa's cooking is good. She does it without requiring notice.</p>
+<p>You have two letters in your coat pocket. Both sealed. Both addressed to Tessaly Aldane.</p>
+<p>After dinner, you sit in Tessaly's room and listen to the house settle into its evening. The third stair creaks. The harbour comes in through the walls, distant but present, the way it always is in this city. The quality of silence that belongs specifically to this building and to none other.</p>
+<p>Tomorrow Pell will want to discuss the documents. Something in the estate is not what it appears to be, and you don't have enough of the picture yet to know what signing will cost. You know where to look now. That is something.</p>
+<p>You say your own name to yourself, once, quietly, in the dark. Not for comfort — for inventory. To confirm it's still there.</p>
+<p>It is.</p>
+<p>That will have to be enough for tonight.</p>`,
+    choices: [{ text: 'End of Chapter Two.', hint: null, permanent: false, effects: {}, next: '__end' }]
+  },
+
+  night_close_read: {
+    label: 'Chapter Two', title: 'The Second Night',
+    narrative: `<p>Dinner is quiet.</p>
+<p>Maren serves and watches. Idris appears briefly in the entrance hall — to collect something, or perhaps simply to look at you — and leaves again without the meal. Something in his expression has shifted since the morning. He saw your face when you came down from the study.</p>
+<p>After dinner you sit in the study with the lamp low, the letter on the desk in front of you.</p>
+<p><em>Do not sign anything with Pell's name on it without understanding what it transfers.</em></p>
+<p><em>The house will tell you what I could not.</em></p>
+<p>The house has been telling you things all day. You are beginning to understand that this is not incidental — that your reading sense isn't only an asset you happened to bring to an impersonation, but something this house was prepared for. Something Tessaly may have carried herself. Something the creditor may have arranged for, specifically because of it.</p>
+<p><em>Something she has that the creditor wants.</em></p>
+<p>In your coat pocket: the letter Idris intercepted, still sealed. From someone who knows what Voss Aldane arranged. Tomorrow: Pell's documents, read more carefully. The second letter. What else the study has to say when you spend more time in it.</p>
+<p>Tomorrow is a different shape from today.</p>
+<p>You sit in the lamplight and for once don't try to manage what the reading sense does with the quiet. It's a strange kind of company. Not unwelcome.</p>`,
+    choices: [{ text: 'End of Chapter Two.', hint: null, permanent: false, effects: {}, next: '__end' }]
+  }
+
+};
+
+// ──────────────────────────────────────────────
+// SCREEN MANAGEMENT
+// ──────────────────────────────────────────────
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+function closeOverlay(id) {
+  document.getElementById(id).classList.remove('active');
+}
+
+// ──────────────────────────────────────────────
+// LOAD SCREEN
+// ──────────────────────────────────────────────
+function initLoadScreen() {
+  const ch2Save = tryGetCh2Save();
+  if (ch2Save) {
+    document.getElementById('load-continue').style.display = 'block';
+  } else {
+    document.getElementById('load-options').style.display = 'block';
+  }
+}
+
+function tryGetCh2Save() {
+  try {
+    const raw = localStorage.getItem('wbn_ch2_save');
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || !parsed.currentScene) return null;
+    return parsed;
+  } catch(e) { return null; }
+}
+
+function loadCh2Save() {
+  const saved = tryGetCh2Save();
+  if (!saved) { showLoadFromString(); return; }
+  gs = saved;
+  updateSenseLabel();
+  document.getElementById('float-buttons').style.display = 'flex';
+  showScreen('screen-game');
+  // Resume at saved scene, not always the beginning
+  goToScene(gs.currentScene || 'morning_wake');
+}
+
+function showLoadFromString() {
+  document.getElementById('load-continue').style.display = 'none';
+  document.getElementById('load-options').style.display = 'block';
+}
+
+function loadFromString() {
+  const str = document.getElementById('save-paste').value.trim();
+  const errEl = document.getElementById('load-error');
+  if (!str) { errEl.textContent = 'Please paste a save string first.'; return; }
+  try {
+    const parsed = JSON.parse(atob(str));
+    if (!parsed || !parsed.playerName) throw new Error();
+    // Merge ch1 save into gs
+    gs.playerName = parsed.playerName || gs.playerName;
+    gs.sealOrigin = parsed.sealOrigin || null;
+    gs.senseType  = parsed.senseType  || null;
+    gs.playerWant = parsed.playerWant || null;
+    gs.stats  = parsed.stats  || gs.stats;
+    gs.npcs   = parsed.npcs   || gs.npcs;
+    gs.ledger = parsed.ledger || [];
+    gs.choiceHistory = parsed.choiceHistory || [];
+    gs.flags = {};
+    errEl.textContent = '';
+    startGame();
+  } catch(e) {
+    errEl.textContent = 'That save string couldn\'t be read. Try copying it again from the Prologue.';
+  }
+}
+
+function startFresh() {
+  // Use defaults, begin chapter
+  gs.flags = {};
+  startGame();
+}
+
+function startGame() {
+  // Record how many ledger entries came in from ch1, so replay can preserve them
+  if (!gs.flags.ch1LedgerCount) {
+    gs.flags.ch1LedgerCount = gs.ledger.length;
+  }
+  updateSenseLabel();
+  document.getElementById('float-buttons').style.display = 'flex';
+  showScreen('screen-game');
+  goToScene('morning_wake');
+}
+
+function updateSenseLabel() {
+  const label = gs.senseType === 'hot'
+    ? 'Reading sense: vivid, present'
+    : gs.senseType === 'cold'
+    ? 'Reading sense: quiet, precise'
+    : 'Reading sense: active';
+  document.getElementById('senseLabel').textContent = label;
+}
+
+// ──────────────────────────────────────────────
+// SCENE ENGINE
+// ──────────────────────────────────────────────
+function goToScene(sceneId) {
+  if (sceneId === '__end') { showChapterEnd(); return; }
+
+  const scene = scenes[sceneId];
+  if (!scene) return;
+
+  gs.currentScene = sceneId;
+  autoSave();
+
+  document.getElementById('chapterLabel').textContent = scene.label;
+  document.getElementById('chapterTitle').textContent = scene.title;
+
+  const narrativeEl = document.getElementById('narrative');
+  narrativeEl.style.opacity = '0';
+  narrativeEl.innerHTML = scene.narrative;
+
+  const choicesWrap = document.getElementById('choices-wrap');
+  choicesWrap.style.display = 'none';
+
+  setTimeout(() => {
+    narrativeEl.style.transition = 'opacity 0.5s';
+    narrativeEl.style.opacity = '1';
+    narrativeEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 80);
+
+  if (scene.hasLedger && scene.ledger) {
+    gs.pendingLedger = scene.ledger;
+    setTimeout(() => triggerLedger(), 1500);
+  } else if (scene.choices && scene.choices.length) {
+    setTimeout(() => renderChoices(scene.choices), 700);
+  }
+}
+
+function renderChoices(choices) {
+  const list = document.getElementById('choices');
+  list.innerHTML = '';
+  choices.forEach(choice => {
+    const btn = document.createElement('button');
+    btn.className = 'choice-btn fade-up';
+    let inner = choice.text;
+    if (choice.permanent) {
+      inner += ` <span class="permanent-marker" title="This choice cannot be undone.">✦</span>`;
+    }
+    if (choice.hint) {
+      inner += `<span class="choice-hint">${choice.hint}</span>`;
+    }
+    btn.innerHTML = inner;
+    btn.onclick = () => makeChoice(choice);
+    list.appendChild(btn);
+  });
+  document.getElementById('choices-wrap').style.display = 'block';
+}
+
+function makeChoice(choice) {
+  document.querySelectorAll('.choice-btn').forEach(b => b.disabled = true);
+  gs.choiceHistory.push({ scene: gs.currentScene, choiceText: choice.text, effects: choice.effects });
+  applyEffects(choice.effects);
+  // Set flags
+  if (choice.next === 'night_close_read') gs.flags.letter_opened = true;
+  autoSave();
+  setTimeout(() => goToScene(choice.next), 300);
+}
+
+// ──────────────────────────────────────────────
+// LEDGER MOMENT
+// ──────────────────────────────────────────────
+function triggerLedger() {
+  const { question, options, sentiments } = gs.pendingLedger;
+  document.getElementById('ledger-moment-q').textContent = question;
+
+  const sentClasses = ['opt-hate', 'opt-endure', 'opt-survive', 'opt-love'];
+  const optsEl = document.getElementById('ledger-moment-opts');
+  optsEl.innerHTML = '';
+
+  options.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = `ledger-opt ${sentClasses[i]}`;
+    btn.innerHTML = `<span class="ledger-opt-num">${['I','II','III','IV'][i]}</span><span>${opt}</span>`;
+    btn.onclick = () => recordLedger(i);
+    optsEl.appendChild(btn);
+  });
+
+  document.getElementById('overlay-ledger-moment').classList.add('active');
+}
+
+function recordLedger(idx) {
+  document.getElementById('overlay-ledger-moment').classList.remove('active');
+  const pending = gs.pendingLedger;
+  const effects = pending.effects[idx] || {};
+  applyEffects(effects);
+
+  gs.ledger.push({
+    question: pending.question,
+    response: pending.options[idx],
+    sentiment: pending.sentiments[idx],
+    effects: effects
+  });
+
+  // Track letter_opened flag — set whether we got here via direct choice or ledger
+  if (pending.next === 'night_close_read') gs.flags.letter_opened = true;
+
+  gs.pendingLedger = null;
+  autoSave();
+  setTimeout(() => goToScene(pending.next), 300);
+}
+
+// ──────────────────────────────────────────────
+// STATS OVERLAY
+// ──────────────────────────────────────────────
+function showStatsOverlay() {
+  document.getElementById('stats-content').innerHTML = buildStatsHTML();
+  document.getElementById('overlay-stats').classList.add('active');
+}
+
+function buildStatsHTML() {
+  const s = gs.stats;
+  const n = gs.npcs;
+  return `
+    <div class="stat-group">
+      <div class="stat-group-label">Your Standing</div>
+      ${statRow('Cover Integrity', s.coverIntegrity, 'fill-cover', 'How convincing the disguise remains.')}
+      ${statRow('Rootedness', s.rootedness, 'fill-root', 'How much you have settled into being her — or resisted it.')}
+      ${statRow('Reading Exposure', s.readingExposure, 'fill-expose', 'How strange you seem to those who don\'t know what you are.')}
+    </div>
+    <div class="stat-group">
+      <div class="stat-group-label">The Household</div>
+      ${npcRow('Harwick Pell', n.pell, 'Solicitor — pragmatic, watchful')}
+      ${npcRow('Maren Solst', n.maren, 'Housekeeper — precise, loyal to something')}
+      ${npcRow('Efa', n.efa, 'Cook — attentive, quietly kind')}
+      ${npcRow('Idris', n.idris, 'Half-brother — resentful, useful, complicated')}
+    </div>
+    <p class="stat-note">NPC suspicion and trust are tracked separately. Low suspicion is not the same as trust. High trust does not mean low suspicion. Both matter independently.</p>
+  `;
+}
+
+function statRow(name, val, fillClass, desc) {
+  return `<div class="stat-row">
+    <div class="stat-name">${name} <span>${val}</span></div>
+    <div style="font-size:0.75rem;color:var(--brass-dim);font-style:italic;margin-bottom:0.35rem;">${desc}</div>
+    <div class="stat-bar"><div class="stat-fill ${fillClass}" style="width:${val}%"></div></div>
+  </div>`;
+}
+
+function npcRow(name, npc, desc) {
+  return `<div class="npc-row">
+    <div class="npc-name">${name} <span style="font-size:0.78rem;color:var(--brass-dim);font-style:italic;">— ${desc}</span></div>
+    <div class="npc-bars">
+      <div>
+        <div class="npc-bar-label">Suspicion <span style="color:var(--mist)">${npc.suspicion}</span></div>
+        <div class="stat-bar"><div class="stat-fill fill-suspicion" style="width:${npc.suspicion}%"></div></div>
+      </div>
+      <div>
+        <div class="npc-bar-label">Trust <span style="color:var(--mist)">${npc.trust}</span></div>
+        <div class="stat-bar"><div class="stat-fill fill-trust" style="width:${npc.trust}%"></div></div>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ──────────────────────────────────────────────
+// LEDGER OVERLAY
+// ──────────────────────────────────────────────
+function showLedgerOverlay() {
+  document.getElementById('ledger-view-content').innerHTML = buildLedgerHTML();
+  document.getElementById('overlay-ledger-view').classList.add('active');
+}
+
+function buildLedgerHTML() {
+  if (gs.ledger.length === 0) {
+    return `<div class="ledger-empty">Nothing recorded yet.</div>`;
+  }
+  return gs.ledger.map(entry => {
+    const effStr = effectsToString(entry.effects);
+    return `<div class="ledger-entry-view">
+      <div class="ledger-q">${entry.question}</div>
+      <div class="ledger-a">
+        <span class="ledger-dot dot-${entry.sentiment}"></span>
+        <span>${entry.response}</span>
+      </div>
+      ${effStr ? `<div class="ledger-effects">${effStr}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+// ──────────────────────────────────────────────
+// CHAPTER END
+// ──────────────────────────────────────────────
+function showChapterEnd() {
+  document.getElementById('float-buttons').style.display = 'none';
+  gs.flags.chapter_complete = true;
+  autoSave();
+
+  document.getElementById('endClosing').textContent = buildClosing();
+  document.getElementById('end-stats').innerHTML = buildStatsHTML();
+  document.getElementById('end-ledger').innerHTML =
+    gs.ledger.length ? buildLedgerHTML() : `<p style="font-style:italic;color:var(--brass-dim);font-size:0.9rem;">No entries recorded.</p>`;
+
+  const saveData = btoa(JSON.stringify({
+    v: 2, chapter: 'chapter_two',
+    playerName: gs.playerName,
+    sealOrigin: gs.sealOrigin,
+    senseType: gs.senseType,
+    playerWant: gs.playerWant,
+    stats: gs.stats,
+    npcs: gs.npcs,
+    ledger: gs.ledger,
+    choiceHistory: gs.choiceHistory,
+    flags: gs.flags
+  }));
+  document.getElementById('saveString').value = saveData;
+
+  showScreen('screen-end');
+}
+
+function buildClosing() {
+  if (gs.flags.letter_opened) {
+    const want = gs.playerWant;
+    if (want === 'understand') {
+      return `You have read a dead man's three drafts. The warning is specific and the warning is real: Pell's arrangement transfers something that was not Voss Aldane's alone to transfer. The house has been telling you things all day, and you came here wanting to understand what the house knows. You are beginning to. That is both more and less than you expected.`;
+    } else if (want === 'survive') {
+      return `The warning changes the shape of what survival looks like. You came here to come out the other side with your freedom intact. You still intend to. But the path through is not the one Pell described — there is something in what he is arranging that you do not yet understand, and you will need to understand it before you sign anything. Knowing that is not nothing. Knowing that is, possibly, everything.`;
+    } else {
+      return `You have read a dead man's careful hand and cannot unread it. The creditor. The arrangement. The thing she has that they want. The house will tell you what he could not — it has been telling you all day. Tomorrow Pell will want signatures. You will need to know, before you give them, what they give away.`;
+    }
+  } else {
+    return `The letter is in your pocket, sealed. You are not ready yet, and you know yourself well enough to know that when you open it you will need to be able to act on what it says — and you don't have enough of the picture yet for that. Tomorrow. You said your own name in the dark to confirm it was still there. It was. For tonight, that is the thing you're holding onto.`;
+  }
+}
+
+function copySave() {
+  const ta = document.getElementById('saveString');
+  ta.select();
+  document.execCommand('copy');
+  const btn = document.querySelector('.copy-btn');
+  const prev = btn.textContent;
+  btn.textContent = 'Copied';
+  setTimeout(() => btn.textContent = prev, 2000);
+}
+
+function replayChapter() {
+  // Preserve however many ledger entries existed when ch2 started (from ch1)
+  const ch1LedgerCount = gs.flags.ch1LedgerCount || 0;
+  const ch1Ledger = gs.ledger.slice(0, ch1LedgerCount);
+
+  gs.stats = { coverIntegrity: 60, rootedness: 20, readingExposure: 0 };
+  gs.npcs = {
+    pell:  { suspicion: 20, trust: 40 },
+    maren: { suspicion: 60, trust: 10 },
+    efa:   { suspicion: 20, trust: 30 },
+    idris: { suspicion: 40, trust: 20 }
+  };
+  // Re-apply ch1 bonuses
+  const sealBonuses = { found: { coverIntegrity: 10 }, given: { pellTrust: 8 }, acquired: { readingExposure: -8 }, unknown: { rootedness: 10 } };
+  if (gs.sealOrigin) applyEffects(sealBonuses[gs.sealOrigin]);
+  const wantBonuses = { survive: { coverIntegrity: 8 }, understand: { rootedness: 8 } };
+  if (gs.playerWant) applyEffects(wantBonuses[gs.playerWant] || {});
+
+  gs.ledger = ch1Ledger;
+  gs.choiceHistory = [];
+  gs.flags = { ch1LedgerCount: ch1LedgerCount };
+  gs.currentScene = null;
+  localStorage.removeItem('wbn_ch2_save');
+  updateSenseLabel();
+  document.getElementById('float-buttons').style.display = 'flex';
+  showScreen('screen-game');
+  goToScene('morning_wake');
+}
+
+// ──────────────────────────────────────────────
+// SAVE / LOAD
+// ──────────────────────────────────────────────
+function autoSave() {
+  try { localStorage.setItem('wbn_ch2_save', JSON.stringify(gs)); } catch(e) {}
+}
+
+// ──────────────────────────────────────────────
+// INIT
+// ──────────────────────────────────────────────
+window.addEventListener('load', () => {
+  initLoadScreen();
+});
+</script>
+</body>
+</html>

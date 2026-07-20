@@ -1,0 +1,310 @@
+
+<style>
+.mode-btn { background: transparent; border: 0.5px solid var(--border); color: var(--text-secondary); padding: 0.4rem 1rem; cursor: pointer; font-size: 13px; border-radius: var(--radius); transition: all 0.15s; }
+.mode-btn.active { background: var(--bg-accent); border-color: var(--border-accent); color: var(--text-accent); }
+.mode-btn:hover:not(.active) { background: var(--surface-1); color: var(--text-primary); }
+.ch-btn { background: transparent; border: 0.5px solid var(--border); color: var(--text-secondary); padding: 0.35rem 0.85rem; cursor: pointer; font-size: 13px; border-radius: var(--radius); transition: all 0.15s; font-family: var(--font-voice); font-style: italic; }
+.ch-btn.active { background: var(--bg-accent); border-color: var(--border-accent); color: var(--text-accent); }
+.ch-btn:hover:not(.active) { background: var(--surface-1); }
+.gen-btn { background: var(--fill-accent); color: var(--on-accent); border: none; padding: 0.6rem 1.5rem; border-radius: var(--radius); cursor: pointer; font-size: 13px; font-weight: 500; transition: all 0.15s; }
+.gen-btn:hover:not(:disabled) { background: var(--fill-accent-hover); }
+.gen-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.copy-btn { background: transparent; border: 0.5px solid var(--border); color: var(--text-secondary); padding: 0.35rem 0.75rem; cursor: pointer; font-size: 12px; border-radius: var(--radius); transition: all 0.15s; }
+.copy-btn:hover { background: var(--surface-1); color: var(--text-primary); }
+textarea { width: 100%; background: var(--fill-field); border: 0.5px solid var(--border); border-radius: var(--radius); color: var(--text-primary); font-size: 14px; padding: 0.65rem 0.75rem; resize: vertical; outline: none; font-family: inherit; line-height: 1.6; box-sizing: border-box; }
+textarea:focus { border-color: var(--border-accent); box-shadow: 0 0 0 2px var(--bg-accent); }
+</style>
+
+<h2 class="sr-only">Development workshop for The Weight of Borrowed Names — generates revision plans, chapter contracts, scene designs, and design decisions using Sonnet.</h2>
+
+<div style="padding: 1rem 0; max-width: 680px;">
+
+  <div style="margin-bottom: 1.25rem;">
+    <div style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.35rem; font-weight: 500;">The Weight of Borrowed Names</div>
+    <h1 style="font-size: 20px; font-weight: 500; color: var(--text-primary); margin: 0 0 0.25rem;">Development Workshop</h1>
+    <p style="font-size: 13px; color: var(--text-secondary); margin: 0; font-family: var(--font-voice); font-style: italic;">Powered by Sonnet · grounded in the design document</p>
+  </div>
+
+  <div style="border-top: 0.5px solid var(--border); padding-top: 1.25rem; margin-bottom: 1.25rem;">
+    <div style="font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.6rem; font-weight: 500;">Mode</div>
+    <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;" id="mode-tabs">
+      <button class="mode-btn active" data-mode="revision">Revision plan</button>
+      <button class="mode-btn" data-mode="contract">Chapter contract</button>
+      <button class="mode-btn" data-mode="scene">Scene workshop</button>
+      <button class="mode-btn" data-mode="decision">Design decision</button>
+    </div>
+  </div>
+
+  <div id="chapter-row" style="margin-bottom: 1.25rem;">
+    <div style="font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.6rem; font-weight: 500;">Chapter</div>
+    <div style="display: flex; gap: 0.4rem;" id="ch-tabs">
+      <button class="ch-btn active" data-ch="two">Chapter Two</button>
+      <button class="ch-btn" data-ch="three">Chapter Three</button>
+    </div>
+  </div>
+
+  <div style="margin-bottom: 1rem;">
+    <div style="font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.6rem; font-weight: 500;" id="input-label">Additional context (optional)</div>
+    <textarea id="user-input" rows="4" placeholder="Any specific concerns or priorities for this revision..."></textarea>
+  </div>
+
+  <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem;">
+    <button class="gen-btn" id="gen-btn" onclick="generate()">Generate</button>
+    <span style="font-size: 12px; color: var(--text-muted); font-family: var(--font-voice); font-style: italic;" id="status-text"></span>
+  </div>
+
+  <div id="output-wrap" style="display: none; border-top: 0.5px solid var(--border); padding-top: 1.25rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+      <div style="font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); font-weight: 500;">Sonnet's response</div>
+      <button class="copy-btn" onclick="copyOutput()"><i class="ti ti-copy" aria-hidden="true" style="font-size: 14px; vertical-align: -2px; margin-right: 4px;"></i>Copy</button>
+    </div>
+    <div id="output-text" style="font-family: var(--font-voice); font-size: 15px; line-height: 1.85; color: var(--text-primary); white-space: pre-wrap; border-left: 2px solid var(--border-accent); padding-left: 1rem;"></div>
+  </div>
+
+  <div id="error-wrap" style="display: none; margin-top: 0.75rem;">
+    <p style="font-size: 13px; color: var(--text-danger); font-style: italic; margin: 0;" id="error-text"></p>
+  </div>
+
+</div>
+
+<script>
+const DESIGN_CONTEXT = `THE WEIGHT OF BORROWED NAMES — DESIGN DOCUMENT
+
+PREMISE: A harbor customs worker with a psychometric "reading sense" is coerced into impersonating Tessaly Aldane, missing heir of the Aldane estate in Caldenmere. The house reaches for them. The central metaphor: they read what things carry while wearing the name of someone whose things they're reading.
+
+THEMATIC CORE: Cover Integrity (can you keep performing Tessaly?) vs Rootedness (how much of you is dissolving into her?). High rootedness = you can leave. Very low rootedness = you might not want to. That's the seduction, not the punishment.
+
+COMPLETED: Prologue, Chapter One, Chapter Two, Chapter Three.
+NEXT: Chapter Four — Pell's meeting at eleven. The impersonation's climax.
+
+PLAYER STATE (gs) — canonical field names:
+- playerName (never interpolated into text — deliberate restraint, may surface in Ch4 signing scene)
+- sealOrigin: 'found' | 'given' | 'acquired' | 'unknown'
+- senseType: 'hot' (vivid, immediate, overwhelming) | 'cold' (quiet, precise, chosen)
+- playerWant: 'survive' | 'understand' | 'unnamed'
+- stats: coverIntegrity (starts 60), rootedness (starts 20), readingExposure (starts 0) — all 0-100
+- npcs: pell (susp 20/trust 40), maren (susp 60/trust 10), efa (susp 20/trust 30), idris (susp 40/trust 20)
+- ledger: append-only array of {question, response, sentiment, effects}
+- flags: chapter-specific
+
+STAT MEANINGS (canonical decisions):
+- coverIntegrity: gates what NPCs volunteer; low = Maren withholds, reports to Vothren before alliance forms
+- rootedness: high = can leave; low = might not want to; very high at Ch4 end = "winning" looks different
+- readingExposure: high = Vothren already knows a real reader is in the house, changes his Ch4 opening terms
+
+LEDGER: Exactly 4 options, always in order: hate / endure / survive / love. Append-only forever.
+
+PERMANENT CHOICES (✦): reading sense used in front of witnesses; truths stated aloud that can't be walked back; foreclosed relationship paths. Don't overuse.
+
+SKILL CHECKS (Ch1 pattern, DORMANT IN CH2-3, must be restored):
+- skillCheck: { stat, against, threshold: 15, pass: sceneId, cost: sceneId, fail: sceneId }
+- diff = gs.stats[stat] - gs.npcs[npc][stat]
+- diff >= 15: pass ("Cover holds.") | diff >= -15: cost ("Something noticed.") | else: fail ("The mask slips.")
+- Use for ANY scene with real jeopardy — not flat three-way choices
+
+DREAM SEQUENCES (Ch3 pattern):
+- Branch: rootedness >= 45 = dream_high_root; readingExposure >= 25 = dream_high_expose; else default
+- isDream flag on both scene and ledger object
+- Different CSS register: .dreaming, .dream-passage, .dream-choice, dreamFade animation
+
+CHARACTERS:
+- Pell: solicitor, pragmatic, wants transfer completed, arrives Ch4 at 11am
+- Maren: housekeeper, suspicious start, was reporting to Vothren, chose player's side in Ch3
+- Efa: cook, warm, perceptive, uncomplicated
+- Idris: half-brother, wants the garden, knows player isn't Tessaly, now an ally
+- Vothren (offstage): collector of reading-gifted people, contracted Voss for Tessaly/a reader for 2 years
+- Tessaly: real heir, in Karath, may be coming
+
+FLAGS SET BUT NOT CONSUMED (gaps to close):
+- letter_opened (Ch2): player read Voss's letter — "do not sign anything with Pell's name without understanding what it transfers." Ch3 and Ch4 must branch on this.
+- chapter_complete (Ch2), ch3_complete (Ch3): set but unread
+
+EFFECT KEYS (exact, case-sensitive): coverIntegrity, rootedness, readingExposure, pellSuspicion, pellTrust, marenSuspicion, marenTrust, efaSuspicion, efaTrust, idrisSuspicion, idrisTrust
+
+SCENE SCHEMA: { label, title, narrative (HTML), hasLedger, ledger{}, choices[], isSkillCheck, skillCheck{}, isDream, permanent }
+
+NARRATIVE ARC BY CHAPTER:
+- Prologue: the coercion — signing the name
+- Ch1: the house becomes real — morning room, Tessaly as felt person, first dinner
+- Ch2: the stakes become real — Idris's letter, Maren's divided loyalty, Voss's warning
+- Ch3: the threat becomes real — Vothren's terms revealed, alliances formed, dream
+- Ch4: the climax — Pell's meeting, the deed, the question of what signing means
+
+REVISION PRIORITIES (Ch2 and Ch3):
+1. Restore skill checks to Ch2's Maren audit and any jeopardy scenes
+2. Make Reading Exposure visibly change NPC behavior (not just flavor)
+3. Consume letter_opened in Ch3 — players who read it should arrive knowing more
+4. Dream branches should carry into Ch4's opening state
+5. Hot/cold senseType should differentiate at least one more scene per chapter (dormant since Ch1)`;
+
+let currentMode = 'revision';
+let currentChapter = 'two';
+
+const modeConfig = {
+  revision: {
+    inputLabel: 'Additional context (optional)',
+    placeholder: 'Any specific concerns or priorities for this revision...',
+    showChapter: true,
+    required: false
+  },
+  contract: {
+    inputLabel: 'Additional context (optional)',
+    placeholder: 'Any specific requirements or constraints for this chapter...',
+    showChapter: true,
+    required: false
+  },
+  scene: {
+    inputLabel: 'Describe the scene',
+    placeholder: 'Who is present, what the dramatic situation is, what the player needs to do or decide...',
+    showChapter: false,
+    required: true
+  },
+  decision: {
+    inputLabel: 'State the decision',
+    placeholder: 'e.g. "Should Vothren appear on-page in Chapter Four?" or "Should Rootedness be able to decrease?"',
+    showChapter: false,
+    required: true
+  }
+};
+
+document.querySelectorAll('[data-mode]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('[data-mode]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentMode = btn.dataset.mode;
+    const cfg = modeConfig[currentMode];
+    document.getElementById('chapter-row').style.display = cfg.showChapter ? '' : 'none';
+    document.getElementById('input-label').textContent = cfg.inputLabel;
+    document.getElementById('user-input').placeholder = cfg.placeholder;
+    document.getElementById('output-wrap').style.display = 'none';
+    document.getElementById('error-wrap').style.display = 'none';
+    document.getElementById('status-text').textContent = '';
+  });
+});
+
+document.querySelectorAll('[data-ch]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('[data-ch]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentChapter = btn.dataset.ch;
+  });
+});
+
+function buildPrompt(userInput) {
+  const chName = currentChapter === 'two' ? 'Two' : 'Three';
+  if (currentMode === 'revision') {
+    return `${DESIGN_CONTEXT}
+
+---
+
+You are the lead designer on this game. Generate a specific, actionable revision plan for Chapter ${chName}.
+
+Include:
+1. Which scenes need skill checks added — specify exact stat vs NPC stat and what the three outcomes produce narratively
+2. Where Reading Exposure should visibly change NPC behavior — be specific about what changes at high vs low values
+3. How letter_opened should gate content (Ch3 only, or as setup for Ch4)
+4. Any scenes where hot/cold senseType should produce different text
+5. Ledger moments that need rebalancing — where are effects misaligned with sentiment?
+6. The emotional arc the revised chapter should produce
+
+Name actual scenes. Use actual stat keys. This plan will drive code.
+
+${userInput ? 'Additional context: ' + userInput : ''}`;
+  }
+  if (currentMode === 'contract') {
+    return `${DESIGN_CONTEXT}
+
+---
+
+Generate a pre-chapter revision contract for Chapter ${chName}. This is written before revision begins.
+
+Format:
+EMOTIONAL ARC — one paragraph
+SCENE LIST — every scene, mechanical function (choice / skill check / ledger / permanent)
+STAT GATES — what high/low values unlock or close per stat
+FLAG CONTRACT — every flag checked (what it gates) and every flag set (what consumes it)
+NPC STATE TARGETS — where each NPC's suspicion/trust should land by chapter end
+CHAPTER BOUNDARY — what the player knows and feels at the exact moment this chapter ends
+
+${userInput ? 'Additional context: ' + userInput : ''}`;
+  }
+  if (currentMode === 'scene') {
+    return `${DESIGN_CONTEXT}
+
+---
+
+The designer needs help designing a specific scene:
+
+${userInput}
+
+Provide:
+1. Whether this warrants a skill check, ledger moment, permanent choice, or standard branch — with reasoning
+2. If skill check: which stat, which NPC stat, threshold, what each of the three outcomes produces narratively
+3. If ledger: draft the question and four options in hate/endure/survive/love order, with specific effects for each
+4. If permanent: what makes it permanent, what it forecloses or opens
+5. Specific effect values (e.g. coverIntegrity: +4, idrisTrust: +8)
+6. How high Reading Exposure should alter this scene, if at all`;
+  }
+  if (currentMode === 'decision') {
+    return `${DESIGN_CONTEXT}
+
+---
+
+Design decision to resolve:
+
+${userInput}
+
+Give a clear recommendation with reasoning. Consider: mechanical consistency with established systems, narrative impact, player experience, and the thematic core. Be direct — this is a decision, not a menu of options.`;
+  }
+}
+
+async function generate() {
+  const userInput = document.getElementById('user-input').value.trim();
+  const cfg = modeConfig[currentMode];
+  
+  if (cfg.required && !userInput) {
+    document.getElementById('error-wrap').style.display = 'block';
+    document.getElementById('error-text').textContent = cfg.inputLabel + ' is required for this mode.';
+    return;
+  }
+  
+  document.getElementById('error-wrap').style.display = 'none';
+  document.getElementById('output-wrap').style.display = 'none';
+  document.getElementById('gen-btn').disabled = true;
+  document.getElementById('status-text').textContent = 'Asking Sonnet…';
+  
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: buildPrompt(userInput) }]
+      })
+    });
+    const data = await response.json();
+    const text = (data.content || []).map(b => b.text || '').join('');
+    if (!text) throw new Error('empty response');
+    document.getElementById('output-text').textContent = text;
+    document.getElementById('output-wrap').style.display = 'block';
+    document.getElementById('status-text').textContent = '';
+  } catch(e) {
+    document.getElementById('error-wrap').style.display = 'block';
+    document.getElementById('error-text').textContent = 'Something went wrong. Please try again.';
+    document.getElementById('status-text').textContent = '';
+  } finally {
+    document.getElementById('gen-btn').disabled = false;
+  }
+}
+
+function copyOutput() {
+  const text = document.getElementById('output-text').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.querySelector('.copy-btn');
+    const prev = btn.innerHTML;
+    btn.innerHTML = '<i class="ti ti-check" aria-hidden="true" style="font-size:14px;vertical-align:-2px;margin-right:4px;"></i>Copied';
+    setTimeout(() => btn.innerHTML = prev, 2000);
+  });
+}
+</script>
