@@ -1,6 +1,6 @@
 # The Weight of Borrowed Names — Technical Design Document
 
-*Living reference for Castlemarne. Current as of ch1-v1, ch2-v2, ch3-v2. Last updated: Ch2/Ch3 skill-check revival + hot/cold involuntary-open mechanic (§5A).*
+*Living reference for Castlemarne. Current as of ch1, ch2, ch3 (unversioned filenames, GitHub is source of truth). Last updated: added narrative arc (§1A) and Chapter Four pre-chapter contract (§15); fixed stale §5 heading; cleaned up §14.*
 
 This document exists so that a chapter built in a fresh context — whether by Rowan by hand, or generated dynamically later — stays mechanically and canonically consistent with everything before it. Read this before writing scene code. When in doubt, this document is the source of truth over any individual chapter file, since chapter files are where drift actually happens.
 
@@ -15,6 +15,22 @@ Two axes are in constant tension throughout the game:
 - **Rootedness** — how much of *you* is dissolving into *her*?
 
 These are designed to sometimes trade off against each other (a choice that protects your cover often costs you rootedness, and vice versa) but not always — that inconsistency is intentional. Real disguise isn't a clean tradeoff.
+
+---
+
+## 1A. Narrative Arc — Chapter by Chapter
+
+*This section exists because the mechanics document what each chapter does, but not what it's* for. *A fresh session reading only scene code has to reverse-engineer the emotional throughline from prose. This is that throughline, stated directly.*
+
+**Prologue — the coercion.** The player signs a name that isn't theirs under duress dressed as opportunity. The solicitor's line — *an offer you cannot safely refuse* — is the whole premise in one sentence. This is where `senseType` and `sealOrigin` get chosen, and where the reading sense first gets framed as something that has, until now, been professionally useful and personally isolating.
+
+**Chapter One — the house becomes real.** Tessaly stops being a name on paper and becomes a felt person: her morning room, her drawers, her handwriting. The critical beat is the discovery that the reading sense — which has only ever been *tolerated* elsewhere — is *welcomed* here. The house reaches for the player. This is the first taste of the real seduction the game is built on: not "you might get caught," but "you might not want to leave."
+
+**Chapter Two — the stakes become real.** What looked like paperwork develops teeth. Idris's intercepted letter and Voss's letter in the study both point at the same thing from different angles: someone else already knows this arrangement is dangerous, and said so in writing, before the player arrived. Maren's audit is the chapter's structural core — the first real test of whether the performance holds under someone else's trained attention, and (as of the revision pass) the first place accumulated stats get a mechanical payoff via skill checks rather than just narrative acknowledgment.
+
+**Chapter Three — the threat becomes real.** Vothren gets a name and a shape: not a vague menace but a specific, historied danger — a collector of people with the reading sense, owed a debt Idris's family already tried to pay with Tessaly. Alliances resolve here: Maren picks a side, Idris admits what he's known. The dream sequence is the chapter's emotional center — it's where accumulated Rootedness and Reading Exposure stop being background numbers and start dictating what the player's own subconscious hands them.
+
+**Chapter Four (in progress) — the climax.** Pell arrives to complete the transfer. This is where every accumulated thread has to actually matter: Cover Integrity should gate what's possible, Reading Exposure should change Vothren's leverage even offstage, Rootedness should color what "winning" even means by the chapter's end, and `letter_opened` — read all the way back in Chapter Two — should pay off a third time. The chapter's central question isn't "does the player get caught," it's **"does the player still want to leave, and if not, is that a loss."**
 
 ---
 
@@ -107,7 +123,7 @@ Do not mark a choice permanent just because it's dramatic. Overuse dilutes the �
 
 ---
 
-## 5. Skill Checks — currently orphaned, flagged for revival
+## 5. Skill Checks — revived in the Ch2/Ch3 pass
 
 Chapter One introduced a genuine mechanic:
 
@@ -122,9 +138,9 @@ function performSkillCheck(check) {
 }
 ```
 
-This produced real stakes: the player's accumulated stats *silently* determined which of three branches they got, dressed up as a flash `skillResult` banner. **Chapters Two and Three do not use this system at all** — every tense moment is hand-branched by choice text instead. This is the single biggest structural drift in the project and the clearest candidate to restore.
+This produced real stakes: the player's accumulated stats *silently* determined which of three branches they got, dressed up as a flash `skillResult` banner. **As of the Ch2/Ch3 revision pass, this system is live again** — Chapter Two's counter-scheduling moment with Maren now runs through it (see `pre_maren_push` and its `_cost`/`_fail` variants). Chapter Three doesn't yet have one of its own; that's a reasonable thing to add if a jeopardy moment surfaces there, but nothing structural is missing.
 
-**Recommendation for Chapter Four and beyond:** any scene with real jeopardy (an audit, an interrogation, a moment where the player might be caught) should route through `performSkillCheck()` rather than a flat three-way choice. This keeps accumulated stats *meaningful* — right now a player who has spent three chapters carefully building Cover Integrity gets no mechanical payoff for it, only flavor-text acknowledgment.
+**Recommendation for Chapter Four and beyond:** any scene with real jeopardy (an audit, an interrogation, a moment where the player might be caught) should route through `performSkillCheck()` rather than a flat three-way choice. This keeps accumulated stats *meaningful* — a player who has spent three chapters carefully building Cover Integrity should get a mechanical payoff for it, not just flavor-text acknowledgment.
 
 If skill checks return, keep the three-tier pass/cost/fail structure — it's already proven and the UI (`.skill-result.pass/.cost/.fail`) already exists in Ch1's stylesheet and should be copied forward, not reinvented.
 
@@ -323,11 +339,43 @@ Carried over from the review pass, not yet resolved, listed here so they don't g
 - localStorage key naming (`wbn_save_ch1` vs. `wbn_ch2_save`/`wbn_ch3_save`) is inconsistent — see §11.
 - Save-string `chapter` field naming is inconsistent (`'prologue'`, `'one'`, `'chapter_two'`, `'chapter_three'`) — see §11.
 - No loader validates that a pasted save string actually came from the expected predecessor chapter.
-- The skill-check mechanic (§5) is dormant since Ch1.
-- Hot/cold reading-sense differentiation (§9.3) is dormant since Ch1's desk scene.
-- `letter_opened` and `chapter_complete` flags are set but never consumed (§7).
 - If a player skips the creditor's letter at `letter_junction` in favor of finding Idris first, there's no return path to read it later — it's simply never resolved on that branch.
-- Project Files does not overwrite or auto-rename on same-name upload (confirmed July 2026) — see §13 for the working convention. No chapter file currently embeds a version marker, so this is presently unenforced.
+- Project Files does not overwrite or auto-rename on same-name upload — no longer a live risk now that GitHub is the source of truth (see §13), but no chapter file currently embeds a version marker, so a similar problem could recur if the repo convention slips.
+
+**Resolved since the last version of this doc:** the skill-check mechanic (§5, revived Ch2/Ch3) · hot/cold differentiation (§5A, now a running mechanic) · `letter_opened` being set but never consumed (now read in Ch3's `morning_three` and its hot-open variant, and required again in Ch4 — see §15) · `chapter_complete`/`ch3_complete` flags are still set but still unread; low priority since nothing currently needs them, but worth a look if Ch4 wants to check "did the player complete Ch3 cleanly."
+
+---
+
+## 15. Chapter Four — Pre-Chapter Contract
+
+*Written before any Ch4 scene code, per the working rhythm established after the Ch2/Ch3 revision pass. This is a contract, not a first draft — it should be revised if the actual writing wants to diverge from it, but divergence should be a decision, not a drift.*
+
+**Emotional arc:** Pell arrives to complete the transfer. Everything the player has built over three chapters — cover, alliances, the reading sense's growing reach, whatever's left of who they were before this — gets tested at once, in a single sustained scene rather than spread across a day. The chapter should end with the player understanding, for the first time with real clarity, what signing costs them specifically, not abstractly. Whether they sign is the climax; what they've become by the time they decide is the point.
+
+**Scene list (proposed, not final):**
+1. Final morning — brief, tense, mechanical (documents gathered, Maren and/or Idris present depending on Ch3 alliance state)
+2. Pell's arrival — **the hot/cold showcase moment** (§5A), reserved specifically for this beat
+3. Pell's opening terms — branches on Reading Exposure per §5A's setup (Vothren already knows vs. doesn't)
+4. The interrogation / negotiation proper — **should be a skill check** (§5), Cover Integrity vs. Pell's suspicion, following the Ch2 `pre_maren_push` pattern
+5. The `letter_opened` payoff — a forewarned player should have language available here that an unforewarned player doesn't (third use of this flag; see §1A)
+6. The signing — the permanent choice (✦) at the chapter's center. Branches meaningfully on accumulated Rootedness per §1A's closing question
+7. Aftermath / chapter close — sets up whatever comes after Ch4, TBD until Rowan and Sabine decide if this is the finale or a bridge to a fifth chapter
+
+**Stat gates (draft, confirm before building):**
+- High Cover Integrity (finally load-bearing per §9 item 2): unlocks a "clean" negotiation path with Pell that low Cover Integrity forecloses
+- Reading Exposure ≥ 25 (matching the §5A threshold already used in Ch3): Vothren's terms arrive harsher, Pell references things he shouldn't know yet
+- Rootedness: no hard gate proposed, but should visibly color the tone of the ending — very low Rootedness should make the signing read as homecoming rather than surrender, without the game telling the player which one it "really" is
+
+**Flag contract:**
+- Reads: `letter_opened`, `maren_saw_reading`, plus whichever alliance/dream flags Ch3 sets on its branching endings
+- Sets: at minimum a `ch4_complete` or equivalent, plus whatever permanent marker the signing scene produces — name TBD when the scene is drafted
+
+**NPC state targets by chapter end:**
+- Maren: should have a clear final position — allied, neutral, or (if the player mismanaged Chapters Two and Three) reporting to Vothren
+- Idris: present for at least part of the negotiation if his Ch3 alliance held
+- Pell: not a suspicion/trust NPC in the existing schema — worth deciding whether he needs one, given he's the chapter's central antagonist-or-not
+
+**Chapter boundary — what the player knows and feels the moment Ch4 ends:** unresolved by design; this is the thing Rowan and Sabine should decide together before scene code starts, since it determines whether the game has a Chapter Five at all.
 
 ---
 
