@@ -1,0 +1,1317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Weight of Borrowed Names — Chapter Four</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=Cinzel:wght@400;600&family=Cinzel+Decorative:wght@400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1a1410;
+    --paper: #f0e8d5;
+    --amber: #c8842a;
+    --amber-dim: #8b5a1a;
+    --navy: #0d1b2a;
+    --navy-mid: #1a2e42;
+    --navy-light: #243548;
+    --brass: #b8943a;
+    --brass-dim: #7a6225;
+    --rust: #8b3a2a;
+    --mist: #c8d4d8;
+    --green-dim: #3a5a2a;
+    --blue-dim: #2a4a6a;
+    --permanent: #d4a843;
+    --dream: #4a3a6a;
+    --dream-light: #8a6aaa;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--navy);
+    min-height: 100vh;
+    font-family: 'IM Fell English', Georgia, serif;
+    color: var(--paper);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none; z-index: 200; opacity: 0.4;
+  }
+
+  body::after {
+    content: '';
+    position: fixed; top: -200px; left: 50%; transform: translateX(-50%);
+    width: 700px; height: 700px;
+    background: radial-gradient(circle, rgba(200,132,42,0.06) 0%, transparent 70%);
+    pointer-events: none; z-index: 0;
+  }
+
+  .screen { display: none; width: 100%; }
+  .screen.active { display: flex; flex-direction: column; align-items: center; }
+
+  /* ── LOAD SCREEN ── */
+  #screen-load {
+    min-height: 100vh; justify-content: center;
+    padding: 4rem 1.5rem; text-align: center;
+    position: relative; z-index: 1;
+  }
+
+  .load-panel { max-width: 560px; width: 100%; }
+  .title-ornament { color: var(--brass); font-size: 1.3rem; letter-spacing: 0.5em; margin-bottom: 2rem; opacity: 0.6; }
+  .title-main { font-family: 'Cinzel Decorative', serif; font-size: clamp(1.8rem, 5vw, 2.8rem); line-height: 1.35; text-shadow: 0 0 60px rgba(200,132,42,0.25); margin-bottom: 0.4rem; }
+  .title-sub { font-family: 'Cinzel', serif; font-size: 0.75rem; letter-spacing: 0.35em; color: var(--brass); text-transform: uppercase; margin-bottom: 2.5rem; }
+  .title-rule { width: 100px; height: 1px; background: linear-gradient(to right, transparent, var(--brass), transparent); margin: 0 auto 2.5rem; }
+
+  .load-premise { font-style: italic; color: var(--mist); font-size: 0.95rem; line-height: 2; max-width: 460px; margin: 0 auto 2.5rem; opacity: 0.8; }
+  .load-label { font-family: 'Cinzel', serif; font-size: 0.65rem; letter-spacing: 0.3em; color: var(--brass); text-transform: uppercase; margin-bottom: 0.8rem; }
+
+  .save-paste {
+    width: 100%; height: 70px; background: rgba(0,0,0,0.25); border: 1px solid var(--brass-dim);
+    color: var(--mist); font-family: monospace; font-size: 0.7rem; padding: 0.8rem;
+    resize: none; outline: none; line-height: 1.5; margin-bottom: 0.8rem;
+    transition: border-color 0.3s;
+  }
+  .save-paste:focus { border-color: var(--amber); }
+
+  .btn-primary {
+    font-family: 'Cinzel', serif; font-size: 0.75rem; letter-spacing: 0.3em; text-transform: uppercase;
+    background: transparent; border: 1px solid var(--brass-dim); color: var(--brass);
+    padding: 0.85rem 2.8rem; cursor: pointer; transition: all 0.3s; margin-bottom: 0.8rem;
+    display: inline-block;
+  }
+  .btn-primary:hover { border-color: var(--amber); color: var(--amber); background: rgba(200,132,42,0.04); }
+
+  .btn-secondary {
+    font-family: 'Cinzel', serif; font-size: 0.65rem; letter-spacing: 0.25em; text-transform: uppercase;
+    background: transparent; border: none; color: var(--brass-dim);
+    padding: 0.5rem 1rem; cursor: pointer; transition: color 0.2s;
+    text-decoration: underline; text-underline-offset: 3px; text-decoration-color: transparent;
+  }
+  .btn-secondary:hover { color: var(--brass); text-decoration-color: var(--brass-dim); }
+
+  .load-divider {
+    display: flex; align-items: center; gap: 1.2rem; margin: 1.5rem 0;
+    color: var(--brass-dim); font-family: 'Cinzel', serif; font-size: 0.6rem; letter-spacing: 0.3em; text-transform: uppercase;
+  }
+  .load-divider::before, .load-divider::after { content: ''; flex: 1; height: 1px; background: rgba(184,148,58,0.2); }
+
+  .error-inline { color: var(--rust); font-style: italic; font-size: 0.85rem; margin-top: 0.5rem; min-height: 1.2em; }
+
+  /* ── FLOATING BUTTONS ── */
+  .float-buttons { position: fixed; top: 1.5rem; right: 1.5rem; display: flex; flex-direction: column; gap: 0.5rem; z-index: 50; }
+  .float-btn {
+    font-family: 'Cinzel', serif; font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase;
+    background: rgba(13,27,42,0.85); border: 1px solid var(--brass-dim); color: var(--brass-dim);
+    padding: 0.5rem 0.9rem; cursor: pointer; transition: all 0.22s; backdrop-filter: blur(4px);
+  }
+  .float-btn:hover { border-color: var(--brass); color: var(--brass); }
+
+  /* ── GAME SCREEN ── */
+  #screen-game { position: relative; z-index: 1; min-height: 100vh; padding-bottom: 4rem; }
+  .game-wrap { max-width: 680px; width: 100%; padding: 2.5rem 1.5rem; }
+
+  .chapter-header {
+    text-align: center; margin-bottom: 2.5rem; padding-bottom: 1.5rem;
+    border-bottom: 1px solid rgba(184,148,58,0.18);
+  }
+  .chapter-label { font-family: 'Cinzel', serif; font-size: 0.6rem; letter-spacing: 0.45em; color: var(--brass-dim); text-transform: uppercase; margin-bottom: 0.5rem; }
+  .chapter-title { font-family: 'Cinzel', serif; font-size: 1.05rem; color: var(--brass); }
+
+  .sense-indicator {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    font-family: 'Cinzel', serif; font-size: 0.6rem; letter-spacing: 0.2em;
+    color: var(--amber); text-transform: uppercase; opacity: 0.65; margin-bottom: 2rem;
+  }
+  .sense-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--amber); animation: sensePulse 2.5s ease-in-out infinite; }
+
+  @keyframes sensePulse {
+    0%, 100% { opacity: 0.25; transform: scale(0.8); }
+    50% { opacity: 1; transform: scale(1.2); }
+  }
+
+  .narrative { line-height: 2.05; font-size: 1.05rem; color: var(--paper); margin-bottom: 2.5rem; min-height: 100px; transition: opacity 0.4s; }
+  .narrative p { margin-bottom: 1.2em; }
+  .narrative em { color: var(--mist); }
+  .narrative strong { color: var(--amber); font-weight: normal; font-style: italic; }
+  .narrative .reading-passage {
+    border-left: 2px solid rgba(200,132,42,0.35); padding-left: 1.3rem;
+    color: var(--mist); margin: 1.5em 0; font-style: italic; line-height: 1.9;
+  }
+  .narrative .formal-note {
+    border: 1px solid rgba(184,148,58,0.25); padding: 1.2rem 1.5rem;
+    margin: 1.5em 0; font-style: italic; color: var(--mist);
+    background: rgba(0,0,0,0.15); line-height: 1.9;
+  }
+
+  .choices-label { font-family: 'Cinzel', serif; font-size: 0.6rem; letter-spacing: 0.35em; color: var(--brass-dim); text-transform: uppercase; margin-bottom: 1rem; }
+  .choices { display: flex; flex-direction: column; gap: 0.7rem; }
+
+  .choice-btn {
+    background: transparent; border: 1px solid rgba(184,148,58,0.22);
+    color: var(--paper); font-family: 'IM Fell English', serif; font-size: 0.95rem;
+    line-height: 1.65; padding: 1rem 1.4rem; text-align: left; cursor: pointer;
+    transition: all 0.22s; position: relative; overflow: hidden;
+  }
+  .choice-btn::before {
+    content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 2px;
+    background: var(--amber); transform: scaleY(0); transition: transform 0.22s;
+  }
+  .choice-btn:hover { border-color: rgba(184,148,58,0.55); background: rgba(200,132,42,0.04); padding-left: 1.9rem; }
+  .choice-btn:hover::before { transform: scaleY(1); }
+  .choice-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+  .choice-btn .choice-hint { display: block; font-size: 0.82rem; color: var(--brass-dim); font-style: italic; margin-top: 0.25rem; }
+
+  .permanent-marker {
+    color: var(--permanent); font-size: 0.85em; margin-left: 0.4rem; position: relative; cursor: help;
+  }
+  .permanent-marker::after {
+    content: 'This choice cannot be undone.';
+    position: absolute; bottom: 1.6em; left: 50%; transform: translateX(-50%);
+    background: var(--navy-mid); border: 1px solid var(--brass-dim);
+    color: var(--mist); font-size: 0.75rem; font-style: italic; font-family: 'IM Fell English', serif;
+    white-space: nowrap; padding: 0.4rem 0.7rem; pointer-events: none;
+    opacity: 0; transition: opacity 0.2s; letter-spacing: 0; z-index: 10;
+  }
+  .permanent-marker:hover::after { opacity: 1; }
+
+  /* ── OVERLAYS ── */
+  .overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(8,18,30,0.94); z-index: 100;
+    align-items: center; justify-content: center; padding: 1.5rem; overflow-y: auto;
+  }
+  .overlay.active { display: flex; }
+
+  .overlay-panel {
+    background: var(--navy-mid); border: 1px solid var(--brass-dim);
+    max-width: 560px; width: 100%; padding: 2.5rem; position: relative;
+    max-height: 90vh; overflow-y: auto;
+  }
+  .overlay-panel::before { content: ''; position: absolute; inset: 6px; border: 1px solid rgba(184,148,58,0.1); pointer-events: none; }
+
+  .overlay-title { font-family: 'Cinzel', serif; font-size: 0.7rem; letter-spacing: 0.45em; color: var(--brass); text-transform: uppercase; text-align: center; margin-bottom: 2rem; }
+  .overlay-close {
+    position: absolute; top: 1rem; right: 1rem; background: transparent; border: none;
+    color: var(--brass-dim); font-family: 'Cinzel', serif; font-size: 0.6rem; letter-spacing: 0.2em;
+    cursor: pointer; text-transform: uppercase; padding: 0.3rem 0.5rem; transition: color 0.2s;
+  }
+  .overlay-close:hover { color: var(--brass); }
+
+  .stat-group { margin-bottom: 2rem; }
+  .stat-group-label { font-family: 'Cinzel', serif; font-size: 0.6rem; letter-spacing: 0.3em; color: var(--brass-dim); text-transform: uppercase; margin-bottom: 1rem; }
+  .stat-row { margin-bottom: 1rem; }
+  .stat-name { font-size: 0.85rem; color: var(--mist); margin-bottom: 0.3rem; display: flex; justify-content: space-between; }
+  .stat-name span { color: var(--brass); font-family: 'Cinzel', serif; font-size: 0.75rem; }
+  .stat-bar { height: 3px; background: rgba(255,255,255,0.08); border-radius: 2px; overflow: hidden; }
+  .stat-fill { height: 100%; border-radius: 2px; transition: width 0.6s ease; }
+  .fill-cover { background: linear-gradient(to right, var(--brass-dim), var(--brass)); }
+  .fill-root { background: linear-gradient(to right, #3a5a2a, #6a9a4a); }
+  .fill-expose { background: linear-gradient(to right, #3a2a1a, var(--amber)); }
+  .fill-suspicion { background: linear-gradient(to right, var(--brass-dim), var(--rust)); }
+  .fill-trust { background: linear-gradient(to right, var(--brass-dim), var(--green-dim)); }
+
+  .npc-row { margin-bottom: 1.2rem; }
+  .npc-name { font-size: 0.85rem; color: var(--mist); margin-bottom: 0.4rem; }
+  .npc-bars { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem 1rem; }
+  .npc-bar-label { font-size: 0.72rem; color: var(--brass-dim); font-style: italic; margin-bottom: 0.2rem; }
+  .stat-note { font-size: 0.8rem; font-style: italic; color: var(--brass-dim); margin-top: 1.5rem; line-height: 1.7; }
+
+  .ledger-entry-view { border-bottom: 1px solid rgba(184,148,58,0.1); padding-bottom: 1.2rem; margin-bottom: 1.2rem; }
+  .ledger-q { font-style: italic; color: var(--mist); font-size: 0.9rem; line-height: 1.7; margin-bottom: 0.5rem; }
+  .ledger-a { font-size: 0.88rem; color: var(--paper); line-height: 1.6; display: flex; gap: 0.8rem; align-items: baseline; }
+  .ledger-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; margin-top: 6px; }
+  .dot-hate { background: var(--rust); }
+  .dot-endure { background: var(--brass-dim); }
+  .dot-survive { background: var(--green-dim); }
+  .dot-love { background: var(--blue-dim); }
+  .ledger-effects { font-size: 0.75rem; font-family: 'Cinzel', serif; color: var(--brass-dim); margin-top: 0.3rem; margin-left: 1.4rem; letter-spacing: 0.05em; }
+  .ledger-empty { font-style: italic; color: var(--brass-dim); font-size: 0.9rem; text-align: center; padding: 1rem 0; }
+
+  .ledger-moment-title { font-family: 'Cinzel', serif; font-size: 0.65rem; letter-spacing: 0.4em; color: var(--brass); text-transform: uppercase; text-align: center; margin-bottom: 0.5rem; }
+  .ledger-moment-q { font-style: italic; color: var(--mist); text-align: center; font-size: 1rem; line-height: 1.8; margin-bottom: 2rem; padding: 0 0.5rem; }
+  .ledger-options { display: flex; flex-direction: column; gap: 0.5rem; }
+  .ledger-opt {
+    background: transparent; border: 1px solid transparent; padding: 0.85rem 1.2rem;
+    text-align: left; cursor: pointer; font-family: 'IM Fell English', serif;
+    font-size: 0.9rem; line-height: 1.6; color: var(--paper); transition: all 0.2s;
+    display: flex; align-items: baseline; gap: 1rem;
+  }
+  .ledger-opt-num { font-family: 'Cinzel', serif; font-size: 0.6rem; letter-spacing: 0.1em; opacity: 0.5; flex-shrink: 0; min-width: 18px; }
+  .ledger-opt:hover { border-color: rgba(184,148,58,0.3); background: rgba(200,132,42,0.04); }
+  .ledger-opt.opt-hate:hover { border-color: rgba(139,58,42,0.4); }
+  .ledger-opt.opt-endure:hover { border-color: rgba(122,98,37,0.4); }
+  .ledger-opt.opt-survive:hover { border-color: rgba(58,90,42,0.4); }
+  .ledger-opt.opt-love:hover { border-color: rgba(42,74,106,0.4); }
+
+  /* ── END SCREEN ── */
+  #screen-end { min-height: 100vh; justify-content: flex-start; padding: 3rem 1.5rem 5rem; position: relative; z-index: 1; }
+  .end-wrap { max-width: 620px; width: 100%; }
+  .end-ornament { font-family: 'Cinzel Decorative', serif; font-size: 0.65rem; letter-spacing: 0.5em; color: var(--brass-dim); text-align: center; margin-bottom: 1.5rem; text-transform: uppercase; }
+  .end-title { font-family: 'Cinzel', serif; font-size: 1.3rem; color: var(--brass); text-align: center; margin-bottom: 0.4rem; }
+  .end-subtitle { font-family: 'Cinzel', serif; font-size: 0.65rem; letter-spacing: 0.3em; color: var(--brass-dim); text-align: center; text-transform: uppercase; margin-bottom: 3rem; }
+  .end-rule { width: 120px; height: 1px; background: linear-gradient(to right, transparent, var(--brass), transparent); margin: 0 auto 3rem; }
+  .end-section-title { font-family: 'Cinzel', serif; font-size: 0.65rem; letter-spacing: 0.4em; color: var(--brass); text-transform: uppercase; margin-bottom: 1.5rem; }
+  .end-closing { font-style: italic; color: var(--mist); font-size: 1rem; line-height: 2; margin-bottom: 3rem; }
+
+  .save-block { margin-bottom: 3rem; }
+  .save-label { font-family: 'Cinzel', serif; font-size: 0.6rem; letter-spacing: 0.3em; color: var(--brass-dim); text-transform: uppercase; margin-bottom: 0.8rem; }
+  .save-note-sm { font-style: italic; font-size: 0.85rem; color: var(--brass-dim); margin-bottom: 1rem; line-height: 1.7; }
+  .save-textarea { width: 100%; height: 80px; background: rgba(0,0,0,0.2); border: 1px solid var(--brass-dim); color: var(--mist); font-family: monospace; font-size: 0.7rem; padding: 0.8rem; resize: none; outline: none; line-height: 1.5; }
+  .copy-btn { margin-top: 0.6rem; font-family: 'Cinzel', serif; font-size: 0.65rem; letter-spacing: 0.25em; text-transform: uppercase; background: transparent; border: 1px solid var(--brass-dim); color: var(--brass-dim); padding: 0.5rem 1.2rem; cursor: pointer; transition: all 0.2s; }
+  .copy-btn:hover { border-color: var(--brass); color: var(--brass); }
+  .next-chapter-btn { font-family: 'Cinzel', serif; font-size: 0.75rem; letter-spacing: 0.3em; text-transform: uppercase; background: transparent; border: 1px solid rgba(184,148,58,0.15); color: var(--brass-dim); padding: 1rem 2.5rem; cursor: not-allowed; opacity: 0.4; display: block; text-align: center; margin-top: 2rem; }
+
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+  .fade-up { animation: fadeUp 0.5s ease forwards; }
+
+  .attribution { position: fixed; bottom: 1rem; right: 1.5rem; font-family: 'Cinzel', serif; font-size: 0.5rem; letter-spacing: 0.2em; color: var(--brass-dim); opacity: 0.35; text-transform: uppercase; z-index: 10; }
+
+  ::-webkit-scrollbar { width: 3px; }
+  ::-webkit-scrollbar-track { background: var(--navy); }
+  ::-webkit-scrollbar-thumb { background: var(--brass-dim); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<!-- ── LOAD SCREEN ── -->
+<div class="screen active" id="screen-load">
+  <div class="load-panel" style="position:relative;z-index:1;padding:4rem 1.5rem;text-align:center;">
+    <div class="title-ornament">❧ &nbsp; ❧ &nbsp; ❧</div>
+    <h1 class="title-main">The Weight of<br>Borrowed Names</h1>
+    <div class="title-sub">Chapter Four · The Fourth Day</div>
+    <div class="title-rule"></div>
+
+    <div id="load-continue" style="display:none;">
+      <p class="load-premise">A session from Chapter Four was found. You may continue where you left off, or begin the chapter again.</p>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:0.8rem;">
+        <button class="btn-primary" onclick="loadCh4Save()">Continue</button>
+        <button class="btn-secondary" onclick="showLoadFromString()">Begin Again</button>
+      </div>
+    </div>
+
+    <div id="load-options" style="display:none;">
+      <p class="load-premise">Paste your save string from Chapter Three to carry your choices forward — or begin without one.</p>
+      <div class="load-label" style="text-align:left;margin-bottom:0.5rem;">Save string from Chapter Three</div>
+      <textarea id="save-paste" class="save-paste" placeholder="Paste save string here…"></textarea>
+      <div class="error-inline" id="load-error"></div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:0.8rem;margin-top:0.8rem;">
+        <button class="btn-primary" onclick="loadFromString()">Load Save &amp; Begin</button>
+        <div class="load-divider">or</div>
+        <button class="btn-secondary" onclick="startFresh()">Begin Without Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── FLOATING BUTTONS ── -->
+<div class="float-buttons" id="float-buttons" style="display:none;">
+  <button class="float-btn" onclick="showStatsOverlay()">Stats</button>
+  <button class="float-btn" onclick="showLedgerOverlay()">Ledger</button>
+</div>
+
+<!-- ── GAME SCREEN ── -->
+<div class="screen" id="screen-game">
+  <div class="game-wrap" style="position:relative;z-index:1;">
+    <div class="chapter-header">
+      <div class="chapter-label" id="chapterLabel">Chapter Four</div>
+      <div class="chapter-title" id="chapterTitle">The Fourth Day</div>
+    </div>
+    <div class="sense-indicator" id="senseIndicator">
+      <span class="sense-dot"></span>
+      <span id="senseLabel">Reading sense: active</span>
+    </div>
+    <div class="narrative fade-up" id="narrative"></div>
+    <div id="choices-wrap" style="display:none;">
+      <div class="choices-label" id="choicesLabel">What do you do?</div>
+      <div class="choices" id="choices"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── END SCREEN ── -->
+<div class="screen" id="screen-end">
+  <div class="end-wrap" style="position:relative;z-index:1;">
+    <div class="end-ornament">End of Chapter Four</div>
+    <h2 class="end-title">The Weight of Borrowed Names</h2>
+    <div class="end-subtitle">Caldenmere — After Farren Leaves</div>
+    <div class="end-rule"></div>
+    <p class="end-closing" id="endClosing"></p>
+    <div style="margin-bottom:3rem;">
+      <div class="end-section-title">What You Carry</div>
+      <div id="end-stats"></div>
+    </div>
+    <div style="margin-bottom:3rem;">
+      <div class="end-section-title">The Ledger</div>
+      <div id="end-ledger"></div>
+    </div>
+    <div class="save-block">
+      <div class="save-label">Save State</div>
+      <p class="save-note-sm">Copy this string to carry your choices into Chapter Five.</p>
+      <textarea class="save-textarea" id="saveString" readonly></textarea>
+      <button class="copy-btn" onclick="copySave()">Copy to Clipboard</button>
+    </div>
+    <button class="next-chapter-btn">Chapter Five — Coming Soon</button>
+    <button class="btn-primary" style="display:block;margin:1.5rem auto 0;width:fit-content;" onclick="replayChapter()">Begin Chapter Four Again</button>
+  </div>
+</div>
+
+<!-- ── STATS OVERLAY ── -->
+<div class="overlay" id="overlay-stats">
+  <div class="overlay-panel">
+    <button class="overlay-close" onclick="closeOverlay('overlay-stats')">Close</button>
+    <div class="overlay-title">What You Are, At Present</div>
+    <div id="stats-content"></div>
+  </div>
+</div>
+
+<!-- ── LEDGER VIEW OVERLAY ── -->
+<div class="overlay" id="overlay-ledger-view">
+  <div class="overlay-panel">
+    <button class="overlay-close" onclick="closeOverlay('overlay-ledger-view')">Close</button>
+    <div class="overlay-title">The Inner Ledger</div>
+    <div id="ledger-view-content"></div>
+  </div>
+</div>
+
+<!-- ── LEDGER MOMENT OVERLAY ── -->
+<div class="overlay" id="overlay-ledger-moment">
+  <div class="overlay-panel">
+    <div class="ledger-moment-title">The Inner Ledger</div>
+    <p class="ledger-moment-q" id="ledger-moment-q"></p>
+    <div class="ledger-options" id="ledger-moment-opts"></div>
+  </div>
+</div>
+
+<div class="attribution">Caldenmere · Year of the Amber Tide</div>
+
+<script>
+// ──────────────────────────────────────────────
+// GAME STATE
+// ──────────────────────────────────────────────
+let gs = {
+  playerName: 'the reader',
+  sealOrigin: null,
+  senseType: null,
+  playerWant: null,
+  stats: { coverIntegrity: 60, rootedness: 20, readingExposure: 0 },
+  npcs: {
+    pell:   { suspicion: 20, trust: 40 },
+    maren:  { suspicion: 60, trust: 10 },
+    efa:    { suspicion: 20, trust: 30 },
+    idris:  { suspicion: 40, trust: 20 },
+    farren: { suspicion: 30, trust: 0 }
+  },
+  ledger: [],
+  choiceHistory: [],
+  flags: {},
+  currentScene: null,
+  pendingLedger: null
+};
+
+function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+
+function applyEffects(effects) {
+  if (!effects) return;
+  const statMap = {
+    coverIntegrity:  ['stats','coverIntegrity'],
+    rootedness:      ['stats','rootedness'],
+    readingExposure: ['stats','readingExposure'],
+    pellSuspicion:   ['npcs','pell','suspicion'],
+    pellTrust:       ['npcs','pell','trust'],
+    marenSuspicion:  ['npcs','maren','suspicion'],
+    marenTrust:      ['npcs','maren','trust'],
+    efaSuspicion:    ['npcs','efa','suspicion'],
+    efaTrust:        ['npcs','efa','trust'],
+    idrisSuspicion:  ['npcs','idris','suspicion'],
+    idrisTrust:      ['npcs','idris','trust'],
+    farrenSuspicion: ['npcs','farren','suspicion'],
+    farrenTrust:     ['npcs','farren','trust'],
+  };
+  for (const [key, val] of Object.entries(effects)) {
+    const path = statMap[key];
+    if (!path) continue;
+    if (path.length === 2) gs[path[0]][path[1]] = clamp(gs[path[0]][path[1]] + val, 0, 100);
+    else if (path.length === 3) gs[path[0]][path[1]][path[2]] = clamp(gs[path[0]][path[1]][path[2]] + val, 0, 100);
+  }
+}
+
+function effectsToString(effects) {
+  if (!effects || Object.keys(effects).length === 0) return '';
+  const labels = {
+    coverIntegrity:'Cover', rootedness:'Rootedness', readingExposure:'Exposure',
+    pellSuspicion:'Pell Suspicion', pellTrust:'Pell Trust',
+    marenSuspicion:'Maren Suspicion', marenTrust:'Maren Trust',
+    efaSuspicion:'Efa Suspicion', efaTrust:'Efa Trust',
+    idrisSuspicion:'Idris Suspicion', idrisTrust:'Idris Trust',
+    farrenSuspicion:'Farren Suspicion', farrenTrust:'Farren Trust'
+  };
+  return Object.entries(effects).map(([k,v]) => `${labels[k]||k} ${v>0?'+':''}${v}`).join(' \u00b7 ');
+}
+
+function getNPCStat(key) {
+  const m = {
+    marenSuspicion:  ['maren','suspicion'],
+    idrisSuspicion:  ['idris','suspicion'],
+    pellSuspicion:   ['pell','suspicion'],
+    efaSuspicion:    ['efa','suspicion'],
+    farrenSuspicion: ['farren','suspicion']
+  };
+  const p = m[key]; return p ? gs.npcs[p[0]][p[1]] : 50;
+}
+
+// ──────────────────────────────────────────────
+// SKILL CHECKS
+// ──────────────────────────────────────────────
+function performSkillCheck(check) {
+  const player = gs.stats[check.stat];
+  const npc = getNPCStat(check.against);
+  const diff = player - npc;
+  if (diff >= check.threshold) return { outcome: 'pass', next: check.pass };
+  if (diff >= -check.threshold) return { outcome: 'cost', next: check.cost };
+  return { outcome: 'fail', next: check.fail };
+}
+
+function routeSkillCheck(check) {
+  const result = performSkillCheck(check);
+  setTimeout(() => goToScene(result.next), 400);
+}
+
+// ──────────────────────────────────────────────
+// SCENES
+// ──────────────────────────────────────────────
+const scenes = {
+
+  morning_four: {
+    label: 'Chapter Four', title: 'Before Eleven',
+    narrativeFn: (gs) => {
+      const marenAllied = gs.npcs.maren.trust >= 30;
+      const idrisPresent = gs.npcs.idris.trust >= 35;
+      const marenBlock = marenAllied
+        ? `<p>Maren has been in and out of the room since half past eight. She has not said much. But she arranged the chairs herself — not the sitting arrangement, the formal one — and you noticed that she placed yours in the position that gives you the light. That was not an accident. That was a choice made on your behalf, without being asked.</p>`
+        : `<p>Maren has been in and out of the room since half past eight. She has not said much. She carries herself with the particular neutrality of someone who has made a decision and is waiting to see whether the day confirms it. What she will do when Pell arrives is the question you do not have an answer for.</p>`;
+      const idrisBlock = idrisPresent
+        ? `<p>Idris appeared briefly at the door before nine. He did not come in. He said: <em>You know more than you are letting on.</em> You did not answer. He nodded once — at what, you could not say — and left. You do not know if that was a warning or an endorsement. You have decided to treat it as both.</p>`
+        : '';
+      return `<p>Pell arrives at eleven. You have known this for three days — since the note on the breakfast tray, since Maren set it in front of you with the careful neutrality of someone delivering a verdict rather than a schedule. You have spent three days preparing, and the preparations are complete, and the morning has arrived anyway.</p>
+<p>The documents are on the writing table: the deed of conditional transfer and the supplementary schedule, ordered the way a solicitor expects — facing the visitor, turned for review. Tessaly Aldane would know to do this. You have decided she does.</p>
+${marenBlock}
+${idrisBlock}
+<p>There is nothing left to arrange. There is only the waiting, and you have learned, in four days, that this house does not leave you alone with it. The reading sense has been running since you woke, slow and particular, the way it does in rooms that hold more than their furniture.</p>`;
+    },
+    hasLedger: true,
+    ledger: {
+      question: 'What are you most afraid Aldous Farren will see?',
+      options: [
+        'That you are no one at all — just a practiced surface over nothing.',
+        'That you have begun to want things from this house.',
+        'That you know more than Tessaly Aldane should.',
+        'That you are, improbably, not afraid of any of it.'
+      ],
+      sentiments: ['hate','endure','survive','love'],
+      effects: [
+        { coverIntegrity: -3 },
+        { rootedness: 5 },
+        { readingExposure: 5 },
+        { rootedness: 5, coverIntegrity: 3 }
+      ],
+      next: 'farren_message'
+    }
+  },
+
+  farren_message: {
+    label: 'Chapter Four', title: 'A Message Before Eleven',
+    narrative: `<p>At ten past ten, the bell for the front entrance rings once.</p>
+<p>A message. Not Pell — the bell is wrong for that, too light, too brief. Maren brings it in herself, a folded note on Pell's letterhead, his hand but brief, the kind of brevity that suggests the writer wants not to be questioned.</p>
+<div class="formal-note"><p><em>Miss Aldane — I write to advise that I am unable to attend this morning's meeting in person. My associate, Mr. Aldous Farren, will attend in my place, with full authority to complete the transfer formalities. I am confident the meeting will proceed in the usual manner. — H. Pell</em></p></div>
+<p>The usual manner. Pell is not here. He has sent someone in his place — someone you have never heard of, never prepared for — arriving in twenty-five minutes.</p>`,
+    choices: [
+      {
+        text: 'Set the note down carefully. Say nothing.',
+        hint: 'contained — give Maren nothing to read; use the twenty-five minutes',
+        permanent: false,
+        effects: { coverIntegrity: 4 },
+        next: 'farren_message_composed'
+      },
+      {
+        text: '"Who is Aldous Farren?"',
+        hint: 'direct — she may know; the asking reveals that you don\'t',
+        permanent: false,
+        effects: { coverIntegrity: -3, marenSuspicion: 4, marenTrust: 5 },
+        next: 'farren_message_ask'
+      }
+    ]
+  },
+
+  farren_message_composed: {
+    label: 'Chapter Four', title: 'Before Eleven',
+    narrativeFn: (gs) => {
+      const marenAllied = gs.npcs.maren.trust >= 30;
+      const closing = marenAllied
+        ? `<p>Maren watches you for a moment. Then: <em>'He is precise,'</em> she says, unprompted, as though she has decided that much is useful for you to know. She says it in the tone of someone issuing a professional caution rather than a personal opinion. You file it.</p>`
+        : `<p>Maren watches you for a moment. She says nothing. You mark the absence of reassurance and make your own preparations.</p>`;
+      return `<p>You set the note down carefully, smoothing one corner that does not need smoothing. The reading sense, running all morning, catches Maren's attention on the back of your neck — the particular quality of watching that means she is measuring something. You give her nothing to measure.</p>
+${closing}
+<p>Twenty-five minutes. You use them.</p>`;
+    },
+    choices: [
+      {
+        text: 'When the bell rings, you are ready.',
+        hint: '',
+        permanent: false,
+        effects: {},
+        next: 'farren_arrival'
+      }
+    ]
+  },
+
+  farren_message_ask: {
+    label: 'Chapter Four', title: 'Before Eleven',
+    narrative: `<p>Maren's expression shifts — not surprise, something more considered. She knows the name. Whatever she thinks of you asking it, she takes a moment to decide how to answer.</p>
+<p><em>'Mr. Vothren's representative in estate matters,'</em> she says. <em>'He has dealt with the Aldane accounts before. Some years ago, before your father — before you left.'</em></p>
+<p>She catches the phrase and redirects it, but not quickly enough. <em>Before you left.</em> She has history with Farren, or with the accounts he manages, or with what those accounts looked like in the years when Tessaly Aldane was still Tessaly Aldane and present in this house.</p>
+<p><em>'He is precise,'</em> she adds. <em>'Very precise. About what he sees and what he writes down.'</em></p>
+<p>This is more than she intended to give you. You are not certain she knows it.</p>`,
+    choices: [
+      {
+        text: '"Thank you, Maren."',
+        hint: 'close the exchange before she reconsiders; you have what you need',
+        permanent: false,
+        effects: {},
+        next: 'farren_arrival'
+      }
+    ]
+  },
+
+  farren_arrival: {
+    label: 'Chapter Four', title: 'Mr. Aldous Farren',
+    narrative: `<p>The bell rings at eleven exactly.</p>
+<p>His voice arrives before he does — level, unhurried, carrying the particular confidence of a man who has been admitted to other people's houses enough times not to need to perform comfort. Maren's reply is brief. Then footsteps: not an announcement, not an apology, simply a man walking somewhere he expects to be received.</p>
+<p>He appears in the doorway a moment later: middle years, unremarkably dressed in clothes that cost more than they announce, carrying a leather folio in the way of someone who has carried leather folios in and out of rooms exactly like this one for most of his professional life. His eyes move across the room once, quickly and completely, before settling on you.</p>
+<p><em>'Miss Aldane,'</em> he says. <em>'Thank you for your patience.'</em></p>`,
+    choices: [
+      {
+        text: 'Deploy the reading sense now — before he has settled.',
+        hint: 'deliberate — a cold reading is controlled and specific; he may register the quality of your attention',
+        permanent: false,
+        effects: { readingExposure: 5 },
+        next: 'farren_arrival_cold_read'
+      },
+      {
+        text: 'Hold it. Let him think what he already thinks.',
+        hint: 'restrained — nothing gathered, nothing risked; go in on what you can observe without the sense',
+        permanent: false,
+        effects: { coverIntegrity: 3 },
+        next: 'farren_arrival_cold_hold'
+      }
+    ]
+  },
+
+  farren_arrival_hot_open: {
+    label: 'Chapter Four', title: 'Mr. Aldous Farren',
+    autoEffects: { readingExposure: 8, farrenSuspicion: -5 },
+    narrative: `<p>The bell rings at eleven exactly, and the reading sense fires before you have chosen to let it.</p>
+<p>This is what hot readings do: they do not ask. The moment the footsteps change — the shift from Maren's familiar weight to something new, something with an unfamiliar pattern of purpose — it catches. Not vision. Not quite. But something: the particular quality of his attention as it moves through a space before he enters it.</p>
+<div class="reading-passage">Assessment, not curiosity. Not judgment. The kind of attention that has already finished making a decision and is now cataloguing the room for evidence in favour of what it decided. He is taking inventory. He has been, you think, since Pell's note was sent.</div>
+<p>The smile he produces when Maren opens the door is the smile of a man who knows exactly what impression he intends to make and is competent enough to make it.</p>
+<p>He appears in the doorway: middle years, unremarkably dressed in clothes that cost more than they announce, leather folio in hand. His eyes move across the room once before settling on you with the practiced neutrality of someone who has already formed an opinion.</p>
+<p><em>'Miss Aldane,'</em> he says. <em>'Thank you for your patience.'</em></p>
+<p>You already know more about Aldous Farren than he knows you know. You intend to keep it that way.</p>`,
+    choices: [
+      {
+        text: 'The meeting begins. You show him to the chair.',
+        hint: '',
+        permanent: false,
+        effects: {},
+        next: 'meeting_intro'
+      }
+    ]
+  },
+
+  farren_arrival_cold_read: {
+    label: 'Chapter Four', title: 'Mr. Aldous Farren',
+    narrative: `<p>A cold reading, deployed deliberately, has a different quality than the involuntary kind — more controlled, more specific, less overwhelming. You have trained for this: hold it until you know what you are looking for, then release it at a precise target.</p>
+<p>You release it at Aldous Farren.</p>
+<div class="reading-passage">A man in professional equilibrium. Not performing calm — actually calm, in the manner of people who have spent a long time in rooms where the stakes belong to other people. His attention moves transactionally. He is evaluating. Whether Pell told him what he is evaluating, you cannot determine.</div>
+<p>He settles into the chair as though he has sat in this specific chair before, or chairs enough like it that the distinction does not matter.</p>
+<p><em>'Thank you for seeing me on short notice,'</em> he says. <em>'I hope the change of representative hasn't caused any inconvenience.'</em></p>
+<p>He means this exactly as much as it is polite to mean it.</p>`,
+    choices: [
+      {
+        text: 'None at all. Shall we proceed?',
+        hint: 'no waste; get to the documents before he gets to you',
+        permanent: false,
+        effects: { farrenSuspicion: -3 },
+        next: 'meeting_intro'
+      }
+    ]
+  },
+
+  farren_arrival_cold_hold: {
+    label: 'Chapter Four', title: 'Mr. Aldous Farren',
+    narrative: `<p>You hold the sense back. It costs something — the muscle memory is to let it run when something unfamiliar enters a space — but you hold it, and the effort is invisible, and that invisibility is the point.</p>
+<p>What you have without it: a man in his middle years, unremarkably dressed, carrying the tools of his profession with the ease of someone who does not have to think about them anymore. His gaze moves across the room once before settling on you. It is an efficient gaze.</p>
+<p><em>'Miss Aldane,'</em> he says. <em>'I appreciate your flexibility. These things are always easier without too many chairs at the table.'</em></p>
+<p>You do not know what he is looking for. You know what he sees: Tessaly Aldane, managing her father's estate, cooperative and prepared. That is enough to work with for now.</p>`,
+    choices: [
+      {
+        text: 'You show him to the chair. The meeting begins.',
+        hint: '',
+        permanent: false,
+        effects: {},
+        next: 'meeting_intro'
+      }
+    ]
+  },
+
+  meeting_intro: {
+    label: 'Chapter Four', title: 'The Transfer Formalities',
+    narrative: `<p>The formalities proceed the way formalities are designed to: with just enough ritual to suggest legitimacy, and just enough pace to prevent anyone from examining what they are legitimating too closely.</p>
+<p>Farren opens his folio. He produces the deed of conditional transfer — correct, in order, aligned with the table's edge — and then the supplementary schedule, and then what appears to be a summary of the estate's current obligations. He arranges them with the care of someone who finds disorder personally offensive.</p>
+<p><em>'I will walk you through the key provisions,'</em> he says. <em>'Mr. Vothren sends his regrets that he was unable to attend personally. He had hoped to.'</em></p>
+<p>You note: <em>had hoped to.</em> Past tense. Something changed his plans. You do not know what.</p>
+<p><em>'The condition itself is straightforward. A period of continued residence and administration — six months minimum, renewable at Mr. Vothren's discretion. Transfer of the estate's primary assets is contingent on completion of that period.'</em> He looks up. <em>'Are you familiar with the terms?'</em></p>`,
+    choices: [
+      {
+        text: '"In broad terms, yes. Please do walk me through them."',
+        hint: 'measured — appropriately cautious, invites him to do the talking',
+        permanent: false,
+        effects: {},
+        next: () => routeSkillCheck({ stat: 'coverIntegrity', against: 'farrenSuspicion', threshold: 10, pass: 'meeting_pass', cost: 'meeting_cost', fail: 'meeting_fail' })
+      },
+      {
+        text: '"Entirely. My solicitor was thorough."',
+        hint: 'confident — commits you to knowing more than you may; may invite detailed follow-up',
+        permanent: false,
+        effects: { farrenSuspicion: -5, coverIntegrity: -8 },
+        next: () => routeSkillCheck({ stat: 'coverIntegrity', against: 'farrenSuspicion', threshold: 10, pass: 'meeting_pass', cost: 'meeting_cost', fail: 'meeting_fail' })
+      }
+    ]
+  },
+
+  meeting_pass: {
+    label: 'Chapter Four', title: 'The Transfer Formalities',
+    autoEffects: { farrenSuspicion: -8, farrenTrust: 10 },
+    narrative: `<p>Farren walks through the provisions with the efficiency of someone who has done this often. You follow the documentation rather than him — a choice that turns out to be the right one. Twice, his spoken summary diverges from what the document actually says, and because you are reading rather than watching his face, you catch both discrepancies without giving any sign that you have caught them.</p>
+<p>The conditional period. Six months' administration. Vothren's discretion.</p>
+<p>The supplementary schedule is more detailed than you expected, and more revealing: the estate's primary obligations are listed without euphemism. Voss Aldane's affairs were, by the end, considerably disordered. You keep your expression exactly where it is.</p>
+<p><em>'Do you have any questions about the schedule?'</em> Farren asks. His tone is neutral in the way neutral is trained rather than felt.</p>
+<p><em>'Not at this stage,'</em> you say. <em>'I will review it this evening.'</em></p>
+<p><em>'Of course.'</em> He makes a small note in his folio. Something, you think, that is not unfavorable. The meeting has gone the way meetings like this are supposed to go.</p>`,
+    choices: [
+      {
+        text: 'The documents are in order. You wait for him to close the folio.',
+        hint: '',
+        permanent: false,
+        effects: {},
+        next: 'patience_line'
+      }
+    ]
+  },
+
+  meeting_cost: {
+    label: 'Chapter Four', title: 'The Transfer Formalities',
+    autoEffects: { farrenSuspicion: 6, coverIntegrity: -5 },
+    narrative: `<p>Farren walks through the provisions with a thoroughness that is, you realise partway through, less about ensuring you understand them and more about watching how you respond. He is testing something.</p>
+<p>You follow as well as you can. The language of the supplementary schedule is designed to be read by someone who has read many such schedules, and you haven't, and the gap shows — very slightly, in the pause before you ask him to repeat the second clause of the conditional period.</p>
+<p>He repeats it without inflection. Does not comment. But his pen moves in the folio.</p>
+<p><em>'Do you have any questions?'</em> His gaze, arriving at your face, stays there slightly longer than the question requires.</p>
+<p><em>'None that can't wait for my own solicitor's review,'</em> you say. It is the right kind of answer — cautious, appropriate — but you feel, in the moment of saying it, that it has arrived just slightly too late to be entirely convincing.</p>`,
+    choices: [
+      {
+        text: 'You hold the table between you and wait.',
+        hint: '',
+        permanent: false,
+        effects: {},
+        next: 'patience_line'
+      }
+    ]
+  },
+
+  meeting_fail: {
+    label: 'Chapter Four', title: 'The Transfer Formalities',
+    autoEffects: { farrenSuspicion: 18, coverIntegrity: -12 },
+    narrative: `<p>The formalities do not go cleanly.</p>
+<p>It is not a single moment — it rarely is. It is accumulation: the clause you misread, the response that arrives a beat late, the question about the supplementary schedule that reveals you have not studied the document carefully enough, or have not studied the right things, or have studied the right things in the wrong order.</p>
+<p>Farren registers each one without comment. This is worse than commenting, because it means he is filing them.</p>
+<p>By the time he reaches the final provisions, something in the room has changed. Not in his manner — his manner stays professional throughout — but in the temperature of his attention. You are being looked at differently than you were thirty minutes ago.</p>
+<p><em>'Is there anything you would like to revisit before I go?'</em> he asks. The kindness in the question is not an accident. It is the particular kindness of someone who has already arrived at their conclusion and is giving you a chance to improve on it.</p>
+<p><em>'No,'</em> you say. <em>'Thank you.'</em></p>`,
+    choices: [
+      {
+        text: 'There is nothing left to salvage in this room. You wait for him to close the folio.',
+        hint: '',
+        permanent: false,
+        effects: {},
+        next: 'patience_line'
+      }
+    ]
+  },
+
+  patience_line: {
+    label: 'Chapter Four', title: 'Her Father\'s Patience',
+    narrativeFn: (gs) => {
+      const marenAllied = gs.npcs.maren.trust >= 30;
+      const idrisPresent = gs.npcs.idris.trust >= 35;
+      const letterKnowledge = gs.flags && gs.flags.letter_opened;
+
+      const marenReaction = marenAllied
+        ? `<p>Maren, standing near the door, does not move. She is looking at the middle distance — the specific fixed point of someone who has heard something they were not expecting and is deciding what it means before they decide what to do with it.</p>`
+        : `<p>Maren looks away immediately. Whatever Farren's observation means, it has landed in her with the force of confirmation. You cannot tell of what.</p>`;
+
+      const idrisReaction = idrisPresent
+        ? `<p>Idris's jaw sets. He turns his head, slightly, toward the window — a movement so controlled it is clearly not involuntary. He knows what the sentence means, or he knows what it means that Farren chose to say it, which is not the same thing.</p>`
+        : '';
+
+      const letterParagraph = letterKnowledge
+        ? `<p>Voss's letter surfaces in your memory without permission. <em>Do not sign anything of Pell's without understanding the conditions.</em> He wrote that knowing what the conditions were. He wrote that knowing, perhaps, that patience was how he had survived them — or failed to. You do not know yet which. But you file the distance between Farren's meaning and your own, carefully, in the place where you keep things you do not yet have words for.</p>`
+        : '';
+
+      return `<p>Farren closes his folio.</p>
+<p>He says, in the tone of a man confirming something he came here to confirm: <em>'She has her father's patience.'</em></p>
+<p>Not to you. Not exactly. The statement arrives in the room like something released into it — directed at the space between you and Maren, or at some fixed point in the middle distance that only he can see. As though he has satisfied some private criterion and is noting the result aloud, for the record.</p>
+${marenReaction}
+${idrisReaction}
+<p>You hear, with the specific clarity of someone who knows they are not supposed to understand what they are hearing, that <em>patience</em> is not a neutral word here. It means something specific about Voss Aldane — something Farren expected to find in his daughter, something he has apparently found. Whether it is a compliment or a warning or simply an observation, you cannot tell without asking.</p>
+<p>You cannot ask. Any version of the question reveals that you do not know.</p>
+${letterParagraph}`;
+    },
+    hasLedger: true,
+    ledger: {
+      question: 'Farren says it like a verdict. What does it land as?',
+      options: [
+        'A threat in a very soft accent.',
+        'Something you don\'t understand, which is worse than a threat.',
+        'Incomplete information, but information. File it and move forward.',
+        'A gift. He thinks you are her. That is all that matters right now.'
+      ],
+      sentiments: ['hate','endure','survive','love'],
+      effects: [
+        { farrenSuspicion: 5, coverIntegrity: -3 },
+        {},
+        { coverIntegrity: 3 },
+        { rootedness: 5, coverIntegrity: 5 }
+      ],
+      next: 'farren_departure'
+    }
+  },
+
+  farren_departure: {
+    label: 'Chapter Four', title: 'The Door',
+    narrative: `<p>The meeting is over. Farren reassembles his folio with the same care he opened it — everything in its place, nothing left behind. He thanks you for your time, thanks Maren, says he will convey your cooperation to Mr. Vothren and trusts the chapter can be considered progressing satisfactorily.</p>
+<p><em>'Mr. Vothren will be in touch regarding the next stage,'</em> he adds. <em>'Directly, I should think. He prefers to manage the later stages himself.'</em></p>
+<p>He is three steps from the door when the moment arrives, the way moments do: without announcement, as a simple fact about the available time before it closes.</p>`,
+    choices: [
+      {
+        text: 'Nothing. Let the room hold what it holds.',
+        hint: 'contained — give him nothing additional to carry back',
+        permanent: true,
+        setFlags: { departure_quiet: true },
+        effects: { coverIntegrity: 4 },
+        next: 'aftermath_four'
+      },
+      {
+        text: '"Please tell Mr. Vothren we look forward to meeting him personally."',
+        hint: 'bold — commits you to something; confidence either reads as belonging or as performance',
+        permanent: true,
+        setFlags: { departure_bold: true },
+        effects: { farrenTrust: 6, coverIntegrity: -4 },
+        next: 'aftermath_four'
+      }
+    ]
+  },
+
+  aftermath_four: {
+    label: 'Chapter Four', title: 'After',
+    narrativeFn: (gs) => {
+      const marenAllied = gs.npcs.maren.trust >= 30;
+      const idrisPresent = gs.npcs.idris.trust >= 35;
+      const root = gs.stats.rootedness;
+
+      const marenBlock = marenAllied
+        ? `<p>Maren closes the front door and comes back in. <em>'He will report that the meeting went correctly,'</em> she says. Not a question — a verdict she has reached, and is sharing with you as a professional courtesy. Something has shifted between you this morning, quietly and without ceremony. You do not remark on it. Neither does she.</p>`
+        : `<p>Maren closes the front door. She moves through the room straightening things that do not need straightening, and you let her work, and neither of you speaks. There is information in that silence. You are not yet certain what it is.</p>`;
+
+      const idrisBlock = idrisPresent
+        ? `<p>Idris leaves without stopping. Whatever he intended to say — whatever the endorsement or the warning meant this morning — he decides it can wait, and the decision itself tells you something. He will come back to it. So will you.</p>`
+        : '';
+
+      const slipBlock = root >= 30
+        ? `<p>Somewhere in the meeting — when Farren said <em>her father's patience</em> — something rose in you that was not Tessaly Aldane. The shape of a different sentence. A name. You caught it before it arrived at your throat, and you are not certain you would have caught it five seconds later, and you are sitting with that now, quietly, in the chair Maren arranged to give you the light.</p>`
+        : `<p><em>Her father's patience.</em> The sentence turns over somewhere in the back of your mind. A different name was briefly available to you during the meeting — you registered it and let it go, which is the professional thing to do, and you are a professional, and this is fine.</p>`;
+
+      return `<p>The house settles after he leaves the way houses do: by going quiet, then slowly resuming the sounds that were always underneath.</p>
+${marenBlock}
+${idrisBlock}
+<p>You are sitting in the chair Maren arranged so the light would fall correctly. The documents are still on the table. The deed of conditional transfer. The supplementary schedule. Six months' residence and administration, renewable at Vothren's discretion. The condition you have, apparently, begun to satisfy.</p>
+${slipBlock}
+<p>Vothren is coming himself next time. Farren said so — <em>he prefers to manage the later stages himself</em> — and whatever Farren will carry back to him, whatever impression he gathered over the course of an eleven o'clock meeting, Vothren will read it and form an opinion, and then he will come.</p>
+<p>You have bought time. The question is what you intend to do with it.</p>`;
+    },
+    hasLedger: true,
+    ledger: {
+      question: 'Vothren is coming. What does that feel like, from where you are sitting right now?',
+      options: [
+        'Like the thing you came here prepared for, finally taking shape.',
+        'Like the thing you have been hoping would stay abstract.',
+        'Like a problem that has a shape now, which is better than a problem that doesn\'t.',
+        'Like the next thing. The house is teaching you to take them one at a time.'
+      ],
+      sentiments: ['hate','endure','survive','love'],
+      effects: [
+        { coverIntegrity: -3 },
+        { rootedness: -3 },
+        { coverIntegrity: 5 },
+        { rootedness: 8 }
+      ],
+      next: '__end'
+    }
+  }
+
+};
+
+// ──────────────────────────────────────────────
+// SCENE ENGINE
+// ──────────────────────────────────────────────
+function goToScene(sceneId) {
+  if (sceneId === '__end') { showChapterEnd(); return; }
+
+  // Hot readers get an involuntary read at Farren's arrival
+  if (sceneId === 'farren_arrival' && gs.senseType === 'hot' && !(gs.flags && gs.flags.autofx_farren_arrival_hot_open)) {
+    sceneId = 'farren_arrival_hot_open';
+  }
+
+  // Handle dynamic scene routing (skill check functions)
+  if (typeof sceneId === 'function') { sceneId(); return; }
+
+  const scene = scenes[sceneId];
+  if (!scene) return;
+
+  gs.currentScene = sceneId;
+  gs.flags = gs.flags || {};
+
+  if (scene.autoEffects && !gs.flags['autofx_' + sceneId]) {
+    applyEffects(scene.autoEffects);
+    gs.flags['autofx_' + sceneId] = true;
+  }
+  autoSave();
+
+  document.getElementById('chapterLabel').textContent = scene.label;
+  document.getElementById('chapterTitle').textContent = scene.title;
+  updateSenseLabel();
+
+  const narrativeEl = document.getElementById('narrative');
+  narrativeEl.style.opacity = '0';
+  narrativeEl.innerHTML = scene.narrativeFn ? scene.narrativeFn(gs) : scene.narrative;
+
+  document.getElementById('choices-wrap').style.display = 'none';
+
+  setTimeout(() => {
+    narrativeEl.style.transition = 'opacity 0.6s';
+    narrativeEl.style.opacity = '1';
+    narrativeEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 80);
+
+  if (scene.hasLedger && scene.ledger) {
+    gs.pendingLedger = scene.ledger;
+    setTimeout(() => renderLedgerContinue(), 600);
+  } else if (scene.choices && scene.choices.length) {
+    setTimeout(() => renderChoices(scene.choices), 700);
+  }
+}
+
+function renderChoices(choices) {
+  const list = document.getElementById('choices');
+  list.innerHTML = '';
+  document.getElementById('choicesLabel').textContent = 'What do you do?';
+
+  choices.forEach(choice => {
+    const btn = document.createElement('button');
+    btn.className = 'choice-btn fade-up';
+    let inner = choice.text;
+    if (choice.permanent) inner += ` <span class="permanent-marker" title="This choice cannot be undone.">\u2736</span>`;
+    if (choice.hint) inner += `<span class="choice-hint">${choice.hint}</span>`;
+    btn.innerHTML = inner;
+    btn.onclick = () => makeChoice(choice);
+    list.appendChild(btn);
+  });
+  document.getElementById('choices-wrap').style.display = 'block';
+}
+
+function makeChoice(choice) {
+  document.querySelectorAll('.choice-btn').forEach(b => b.disabled = true);
+  gs.choiceHistory.push({ scene: gs.currentScene, choiceText: choice.text, effects: choice.effects });
+  applyEffects(choice.effects);
+  if (choice.setFlags) {
+    gs.flags = gs.flags || {};
+    for (const [k, v] of Object.entries(choice.setFlags)) {
+      gs.flags[k] = v;
+    }
+  }
+  autoSave();
+  const next = typeof choice.next === 'function' ? choice.next() : choice.next;
+  if (next !== undefined) setTimeout(() => goToScene(next), 300);
+}
+
+// ──────────────────────────────────────────────
+// LEDGER MOMENT
+// ──────────────────────────────────────────────
+function renderLedgerContinue() {
+  const list = document.getElementById('choices');
+  list.innerHTML = '';
+  const btn = document.createElement('button');
+  btn.className = 'choice-btn fade-up';
+  btn.innerHTML = 'Continue <span class="choice-hint">The ledger opens.</span>';
+  btn.onclick = () => {
+    document.getElementById('choices-wrap').style.display = 'none';
+    triggerLedger();
+  };
+  list.appendChild(btn);
+  document.getElementById('choices-wrap').style.display = 'block';
+}
+
+function triggerLedger() {
+  const pending = gs.pendingLedger;
+  const { question, options } = pending;
+  document.getElementById('ledger-moment-q').textContent = question;
+
+  const sentClasses = ['opt-hate','opt-endure','opt-survive','opt-love'];
+  const optsEl = document.getElementById('ledger-moment-opts');
+  optsEl.innerHTML = '';
+
+  options.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = `ledger-opt ${sentClasses[i]}`;
+    btn.innerHTML = `<span class="ledger-opt-num">${['I','II','III','IV'][i]}</span><span>${opt}</span>`;
+    btn.onclick = () => recordLedger(i);
+    optsEl.appendChild(btn);
+  });
+
+  document.getElementById('overlay-ledger-moment').classList.add('active');
+}
+
+function recordLedger(idx) {
+  document.getElementById('overlay-ledger-moment').classList.remove('active');
+
+  const pending = gs.pendingLedger;
+  const effects = pending.effects[idx] || {};
+  applyEffects(effects);
+
+  gs.ledger.push({
+    question: pending.question,
+    response: pending.options[idx],
+    sentiment: pending.sentiments[idx],
+    effects: effects
+  });
+
+  gs.pendingLedger = null;
+  autoSave();
+  setTimeout(() => goToScene(pending.next), 300);
+}
+
+// ──────────────────────────────────────────────
+// STATS & LEDGER OVERLAYS
+// ──────────────────────────────────────────────
+function showStatsOverlay() {
+  document.getElementById('stats-content').innerHTML = buildStatsHTML();
+  document.getElementById('overlay-stats').classList.add('active');
+}
+
+function showLedgerOverlay() {
+  document.getElementById('ledger-view-content').innerHTML = buildLedgerHTML();
+  document.getElementById('overlay-ledger-view').classList.add('active');
+}
+
+function closeOverlay(id) {
+  document.getElementById(id).classList.remove('active');
+}
+
+function buildStatsHTML() {
+  const s = gs.stats, n = gs.npcs;
+  const marenDesc = n.maren.trust >= 30 ? 'Housekeeper — chosen a side; watching closely' : 'Housekeeper — waiting to be certain';
+  const idrisDesc = n.idris.trust >= 35 ? 'Half-brother — uncertain ally; the garden matters' : 'Half-brother — complicated, present at a distance';
+  return `
+    <div class="stat-group">
+      <div class="stat-group-label">Your Standing</div>
+      ${statRow('Cover Integrity', s.coverIntegrity, 'fill-cover', 'How convincing the disguise remains.')}
+      ${statRow('Rootedness', s.rootedness, 'fill-root', 'How much of yourself you have allowed to settle here.')}
+      ${statRow('Reading Exposure', s.readingExposure, 'fill-expose', "How strange you seem to those who don't know what you are.")}
+    </div>
+    <div class="stat-group">
+      <div class="stat-group-label">The Household</div>
+      ${npcRow('Harwick Pell', n.pell, 'Solicitor — installed you here; invested in your success')}
+      ${npcRow('Maren Solst', n.maren, marenDesc)}
+      ${npcRow('Efa', n.efa, 'Cook — attentive, quietly present')}
+      ${npcRow('Idris', n.idris, idrisDesc)}
+    </div>
+    <div class="stat-group">
+      <div class="stat-group-label">Visitors</div>
+      ${npcRow('Aldous Farren', n.farren, "Vothren's associate — assessed you once; his report shapes what comes next")}
+    </div>
+    <p class="stat-note">Farren's impression of you will inform Vothren's approach in Chapter Six. Cover integrity and your household alliances will both matter in Chapter Five.</p>`;
+}
+
+function statRow(name, val, fillClass, desc) {
+  return `<div class="stat-row">
+    <div class="stat-name">${name} <span>${val}</span></div>
+    <div style="font-size:0.75rem;color:var(--brass-dim);font-style:italic;margin-bottom:0.35rem;">${desc}</div>
+    <div class="stat-bar"><div class="stat-fill ${fillClass}" style="width:${val}%"></div></div>
+  </div>`;
+}
+
+function npcRow(name, npc, desc) {
+  return `<div class="npc-row">
+    <div class="npc-name">${name} <span style="font-size:0.78rem;color:var(--brass-dim);font-style:italic;">— ${desc}</span></div>
+    <div class="npc-bars">
+      <div>
+        <div class="npc-bar-label">Suspicion <span style="color:var(--mist)">${npc.suspicion}</span></div>
+        <div class="stat-bar"><div class="stat-fill fill-suspicion" style="width:${npc.suspicion}%"></div></div>
+      </div>
+      <div>
+        <div class="npc-bar-label">Trust <span style="color:var(--mist)">${npc.trust}</span></div>
+        <div class="stat-bar"><div class="stat-fill fill-trust" style="width:${npc.trust}%"></div></div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function buildLedgerHTML() {
+  if (gs.ledger.length === 0) return `<div class="ledger-empty">Nothing recorded yet.</div>`;
+  return gs.ledger.map(entry => {
+    const effStr = effectsToString(entry.effects);
+    return `<div class="ledger-entry-view">
+      <div class="ledger-q">${entry.question}</div>
+      <div class="ledger-a"><span class="ledger-dot dot-${entry.sentiment}"></span><span>${entry.response}</span></div>
+      ${effStr ? `<div class="ledger-effects">${effStr}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+// ──────────────────────────────────────────────
+// CHAPTER END
+// ──────────────────────────────────────────────
+function showChapterEnd() {
+  document.getElementById('float-buttons').style.display = 'none';
+  gs.flags.ch4_complete = true;
+
+  // Set Farren's final report flag based on his trust/suspicion
+  if (gs.npcs.farren.trust >= 10 && gs.npcs.farren.suspicion <= 25) {
+    gs.flags.farren_favorable = true;
+  } else if (gs.npcs.farren.suspicion >= 35) {
+    gs.flags.farren_unfavorable = true;
+  }
+
+  autoSave();
+
+  document.getElementById('endClosing').textContent = buildClosing();
+  document.getElementById('end-stats').innerHTML = buildStatsHTML();
+  document.getElementById('end-ledger').innerHTML =
+    gs.ledger.length ? buildLedgerHTML() : `<p style="font-style:italic;color:var(--brass-dim);font-size:0.9rem;">No entries recorded.</p>`;
+
+  const saveData = btoa(JSON.stringify({
+    v: 4, chapter: 'chapter_four',
+    playerName: gs.playerName,
+    sealOrigin: gs.sealOrigin,
+    senseType: gs.senseType,
+    playerWant: gs.playerWant,
+    stats: gs.stats,
+    npcs: gs.npcs,
+    ledger: gs.ledger,
+    choiceHistory: gs.choiceHistory,
+    flags: gs.flags
+  }));
+  document.getElementById('saveString').value = saveData;
+  showScreen('screen-end');
+}
+
+function buildClosing() {
+  const want = gs.playerWant;
+  const bold = gs.flags && gs.flags.departure_bold;
+  const letterOpened = gs.flags && gs.flags.letter_opened;
+  const root = gs.stats.rootedness;
+  const favorable = gs.flags && gs.flags.farren_favorable;
+
+  if (want === 'understand') {
+    if (letterOpened) {
+      return `You came here wanting to understand what the house knows. Today you learned something the house could not have told you — something Farren brought in from Vothren's world, the mathematics of patience and debt and the particular value Voss Aldane had in those calculations. The letter you read in the study named the conditions without naming what they meant. Farren named what they meant without naming the conditions. Between the two of them, you are beginning to have the shape of the whole thing. Vothren is coming. When he arrives, you will be ready to ask the right questions.`;
+    } else {
+      return `You came here wanting to understand what the house knows. Today you learned something the house could not have told you — something Farren brought in from outside, the specific weight of Voss Aldane's name in Vothren's accounts, the patience that apparently characterised him. You do not understand all of it yet. But you understand the shape of what you don't understand, which is a different position than the one you were in this morning. Vothren is coming. You will be ready.`;
+    }
+  } else if (want === 'survive') {
+    if (bold) {
+      return `You told Farren to tell Vothren you looked forward to meeting him personally. You are still deciding whether that was survival or something else — confidence so sustained it has started to look, even from the inside, like desire. Six months' administration. Vothren's discretion. The condition you have apparently committed to satisfying, whether you fully meant to or not. You have survived today. The question of what you are surviving toward is newer.`;
+    } else if (favorable) {
+      return `You let Farren go without giving him anything additional to carry, and he will carry back something favorable anyway — whatever he read in the room, in the documents, in the way you held yourself through the formalities. That, too, is a form of survival: knowing when your presence alone is sufficient, and letting it be sufficient without interference. Vothren will have an impression of Tessaly Aldane before he arrives. It will not be a poor one.`;
+    } else {
+      return `You let him go. Sometimes survival is knowing what not to say in a room that is already measuring you. Vothren will receive Farren's report and form an opinion, and whatever that opinion is, you will manage it when it arrives. That is what you are learning to do here: to manage arrivals. There will be more of them.`;
+    }
+  } else {
+    if (root >= 30) {
+      return `You don't have a name yet for what you are doing here, what you have become over four days, what the house has made of you or you of it. But somewhere in the middle of this morning — when Farren said her father's patience and the room held its breath — something rose in you that was not Tessaly Aldane. Something that wanted to speak under its own name. You caught it. You will have to keep catching it, or you will have to decide what it means that you keep needing to. Vothren is coming. The two problems are not unrelated.`;
+    } else {
+      return `You don't have a name for what you are doing here. What you have is this: Farren has been and gone and taken something back with him — an impression, whatever he gathered in the course of an eleven o'clock meeting — and whatever it is, you put it there. Deliberately or not, it carries your mark. Vothren will read it and then he will come to see for himself. That feels, improbably, like something you can work with.`;
+    }
+  }
+}
+
+function copySave() {
+  const ta = document.getElementById('saveString');
+  ta.select();
+  document.execCommand('copy');
+  const btn = document.querySelector('.copy-btn');
+  const prev = btn.textContent;
+  btn.textContent = 'Copied';
+  setTimeout(() => btn.textContent = prev, 2000);
+}
+
+function replayChapter() {
+  const ch4LedgerCount = gs.flags.ch4LedgerCount || 0;
+  const prevLedger = gs.ledger.slice(0, ch4LedgerCount);
+  const savedNpcs = JSON.parse(JSON.stringify(gs.npcs));
+  const savedStats = JSON.parse(JSON.stringify(gs.stats));
+  const savedFlags = {
+    ch4LedgerCount: ch4LedgerCount,
+    letter_opened:  gs.flags.letter_opened  || false,
+    maren_saw_reading: gs.flags.maren_saw_reading || false,
+    ch3_complete:   gs.flags.ch3_complete   || false
+  };
+
+  gs = {
+    playerName: gs.playerName,
+    sealOrigin: gs.sealOrigin,
+    senseType:  gs.senseType,
+    playerWant: gs.playerWant,
+    stats: savedStats,
+    npcs:  savedNpcs,
+    ledger: prevLedger,
+    choiceHistory: [],
+    flags: savedFlags,
+    currentScene: null,
+    pendingLedger: null
+  };
+  gs.npcs.farren = { suspicion: 30, trust: 0 };
+
+  localStorage.removeItem('wbn_ch4_save');
+  updateSenseLabel();
+  document.getElementById('float-buttons').style.display = 'flex';
+  showScreen('screen-game');
+  startGame();
+}
+
+// ──────────────────────────────────────────────
+// SAVE / AUTOSAVE
+// ──────────────────────────────────────────────
+function autoSave() {
+  try { localStorage.setItem('wbn_ch4_save', JSON.stringify(gs)); } catch(e) {}
+}
+
+// ──────────────────────────────────────────────
+// LOADER
+// ──────────────────────────────────────────────
+function initLoadScreen() {
+  const ch4Save = tryGetCh4Save();
+  if (ch4Save) {
+    document.getElementById('load-continue').style.display = 'block';
+  } else {
+    document.getElementById('load-options').style.display = 'block';
+  }
+}
+
+function tryGetCh4Save() {
+  try {
+    const raw = localStorage.getItem('wbn_ch4_save');
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || !parsed.currentScene) return null;
+    return parsed;
+  } catch(e) { return null; }
+}
+
+function loadCh4Save() {
+  const saved = tryGetCh4Save();
+  if (!saved) { showLoadFromString(); return; }
+  gs = saved;
+  if (!gs.npcs.farren) gs.npcs.farren = { suspicion: 30, trust: 0 };
+  updateSenseLabel();
+  document.getElementById('float-buttons').style.display = 'flex';
+  showScreen('screen-game');
+  goToScene(gs.currentScene || 'morning_four');
+}
+
+function showLoadFromString() {
+  document.getElementById('load-continue').style.display = 'none';
+  document.getElementById('load-options').style.display = 'block';
+}
+
+function loadFromString() {
+  const str = document.getElementById('save-paste').value.trim();
+  const errEl = document.getElementById('load-error');
+  if (!str) { errEl.textContent = 'Please paste a save string first.'; return; }
+  try {
+    const parsed = JSON.parse(atob(str));
+    if (!parsed || !parsed.playerName) throw new Error();
+    gs.playerName    = parsed.playerName  || gs.playerName;
+    gs.sealOrigin    = parsed.sealOrigin  || null;
+    gs.senseType     = parsed.senseType   || null;
+    gs.playerWant    = parsed.playerWant  || null;
+    gs.stats         = parsed.stats       || gs.stats;
+    gs.npcs          = parsed.npcs        || gs.npcs;
+    gs.ledger        = parsed.ledger      || [];
+    gs.choiceHistory = parsed.choiceHistory || [];
+    gs.flags         = parsed.flags       || {};
+    if (!gs.npcs.farren) gs.npcs.farren = { suspicion: 30, trust: 0 };
+    errEl.textContent = '';
+    startGame();
+  } catch(e) {
+    errEl.textContent = 'That save string couldn\'t be read. Try copying it again from Chapter Three.';
+  }
+}
+
+function startFresh() {
+  gs.flags = {};
+  gs.npcs.farren = { suspicion: 30, trust: 0 };
+  startGame();
+}
+
+function startGame() {
+  if (!gs.flags.ch4LedgerCount) gs.flags.ch4LedgerCount = gs.ledger.length;
+  updateSenseLabel();
+  document.getElementById('float-buttons').style.display = 'flex';
+  showScreen('screen-game');
+  goToScene('morning_four');
+}
+
+function updateSenseLabel() {
+  const label = gs.senseType === 'hot'
+    ? 'Reading sense: vivid, present'
+    : gs.senseType === 'cold'
+    ? 'Reading sense: quiet, precise'
+    : 'Reading sense: active';
+  document.getElementById('senseLabel').textContent = label;
+}
+
+// ──────────────────────────────────────────────
+// SCREEN MANAGEMENT
+// ──────────────────────────────────────────────
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ──────────────────────────────────────────────
+// INIT
+// ──────────────────────────────────────────────
+window.addEventListener('load', () => {
+  initLoadScreen();
+});
+</script>
+</body>
+</html>
