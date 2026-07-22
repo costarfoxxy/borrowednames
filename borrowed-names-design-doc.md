@@ -1,6 +1,6 @@
 # The Weight of Borrowed Names — Technical Design Document
 
-*Living reference for Castlemarne. Current as of ch1 (patched), ch2, ch3 (unversioned filenames, GitHub is source of truth). Last updated: added full narrative arc §1B (all beats, chapter count, structure); resolved §9.4 (Vothren offstage, Farren introduced); confirmed Pell as minimal NPC with schema entry; seeded playerName for Ch5+; patched Ch1 §14 inconsistencies (flags location, localStorage key, chapter field); updated §15 with confirmed Ch4 structure.*
+*Living reference for Castlemarne. Current as of ch1 (patched), ch2, ch3, ch4 (unversioned filenames, GitHub is source of truth). Last updated: Ch4 built and syntax-verified; §7 flags updated with Ch4 flag contract; §15 marked built with what diverged from the contract; §16 added as Ch5 pre-chapter contract placeholder.*
 
 This document exists so that a chapter built in a fresh context — whether by Rowan by hand, or generated dynamically later — stays mechanically and canonically consistent with everything before it. Read this before writing scene code. When in doubt, this document is the source of truth over any individual chapter file, since chapter files are where drift actually happens.
 
@@ -279,11 +279,16 @@ This is a good pattern — it makes the *accumulation* of earlier choices visibl
 | `ch1LedgerCount` | Ch1 (`.flags` — patched) | Ch1 replay | Ch1 replay ✓ |
 | `ch1LedgerCount` | Ch2 (`.flags`) | Ch2 replay | Ch2 replay ✓ |
 | `ch3LedgerCount` | Ch3 (`.flags`) | Ch3 replay | Ch3 replay ✓ |
-| `letter_opened` | Ch2 | Ch3+ narrative branching, Ch4 §15 payoff | Ch3 `morning_three` ✓; Ch4 pending |
-| `maren_saw_reading` | Ch2 | Ch4 alliance branching | Ch4 pending |
+| `ch4LedgerCount` | Ch4 (`.flags`) | Ch4 replay | Ch4 replay ✓ |
+| `letter_opened` | Ch2 | Ch3+ narrative branching; Ch4 `patience_line` | Ch3 `morning_three` ✓; Ch4 `patience_line` narrativeFn ✓ |
+| `maren_saw_reading` | Ch2 | Ch4 alliance branching | Ch4 `morning_four` / `aftermath_four` narrativeFns read `npcs.maren.trust` directly ✓ |
 | `chapter_complete` | Ch2 | Ch3 loader | *nowhere* — low priority |
-| `ch3_complete` | Ch3 | Ch4 loader | Ch4 pending |
-| `ch4_complete` | Ch4 (TBD) | Ch5 loader | *not yet set* |
+| `ch3_complete` | Ch3 | Ch4 loader | Ch4 `loadFromString` accepts any valid save ✓ |
+| `ch4_complete` | Ch4 `showChapterEnd()` | Ch5 loader | Ch5 pending |
+| `farren_favorable` | Ch4 `showChapterEnd()` — set if `farren.trust ≥ 10 && farren.suspicion ≤ 25` | Ch6 (Vothren's posture) | Ch6 pending |
+| `farren_unfavorable` | Ch4 `showChapterEnd()` — set if `farren.suspicion ≥ 35` | Ch6 (Vothren's posture) | Ch6 pending |
+| `departure_bold` | Ch4 `farren_departure` scene — permanent choice ✦ | Ch5 closing text; Ch6 Vothren's prior knowledge | Ch5 pending |
+| `departure_quiet` | Ch4 `farren_departure` scene — permanent choice ✦ | Ch5 opening; optional texture | Ch5 pending |
 
 ---
 
@@ -413,7 +418,9 @@ Items resolved since the last version of this doc are noted inline below. Remain
 
 ---
 
-## 15. Chapter Four — Pre-Chapter Contract
+## 15. Chapter Four — Built
+
+*The pre-chapter contract became the chapter. Notes on divergence from plan follow the contract text.*
 
 *Written before any Ch4 scene code, per the working rhythm established after the Ch2/Ch3 revision pass. This is a contract, not a first draft — it should be revised if the actual writing wants to diverge from it, but divergence should be a decision, not a drift.*
 
@@ -448,6 +455,36 @@ Items resolved since the last version of this doc are noted inline below. Remain
 - Idris: present if his Ch3 alliance held; his presence in scene 1 is meaningful
 
 **Chapter boundary — what the player knows when Ch4 ends:** Vothren was not here. He sent someone instead. Whatever was supposed to be resolved is deferred. The household is more pressured, not less. And somewhere in the middle of the meeting, the player almost said their own name — and caught it. Ch5 begins with that almost still in the room.
+
+**Divergences from the contract (noted after build):**
+- Pell does not appear on-page in Ch4. The contract anticipated him as an uneasy co-conspirator in the room; in the build, his absence is the inciting event (his note at 10:10 announcing Farren). This works better — Pell's non-appearance raises his suspicion as a character rather than resolving anything. His trust/suspicion in the schema remain live but his Ch4 arc is deferred to Ch5.
+- Reading Exposure ≥ 25 gate (Farren references something he shouldn't know) was not implemented — the meeting scenes don't branch on this stat. Low priority to retrofit; consider for Ch5's opener if the stat needs a payoff moment.
+- The `maren_saw_reading` flag is not explicitly read in Ch4. Alliance branching reads `gs.npcs.maren.trust` directly, which is cleaner and has the same effect.
+- `departure_bold` and `departure_quiet` are the two permanent choice flags from scene 6. The contract said "name TBD when drafted" — these are the names.
+
+---
+
+## 16. Chapter Five — Pre-Chapter Contract
+
+*To be written before Ch5 scene code starts, per the working rhythm. Placeholder notes only until Rowan and Sabine review the Ch4 build and confirm the direction.*
+
+**Beat covered:** Beat Six (What Tessaly Was) + early Beat Seven (the near-slip planted but not yet seen).
+
+**The central question Ch5 must answer:** Who was the real Tessaly Aldane, and what does knowing that cost the player? By the end of Ch5, the player should have a partial answer — enough to destabilise the comfortable version of "I am just filling an absence" — and someone in the house should have noticed something that doesn't quite fit, without yet knowing what it means.
+
+**Flags Ch5 reads from Ch4:**
+- `departure_bold` — the bold departure choice should colour the Ch5 opening; Maren or Idris may reference it
+- `farren_favorable` / `farren_unfavorable` — sets the emotional weather of Ch5; an unfavorable report creates urgency the player can feel even before Vothren makes contact
+- `letter_opened` — still in play; whatever the player knows from Voss's letter will matter when the real Tessaly's story begins to surface
+
+**Flags Ch5 must set:**
+- `tessaly_truth_known` (or equivalent) — the player has access to the real Tessaly's story; shape TBD
+- `slip_witnessed` — someone has seen something; which NPC and what they do with it depends on trust scores
+
+**Key open questions before Ch5 build:**
+- What is the mechanism by which the player learns about the real Tessaly? (Object the reading sense can access? A person who knew her? A letter that arrives?) This is the chapter's structural spine.
+- Which NPC witnesses the near-slip? Maren is the most structurally interesting (highest stakes, clearest leverage dynamic). Idris is the most emotionally resonant. Efa is the safest and therefore perhaps the most surprising.
+- Does Pell appear in Ch5, and if so, in what capacity? He was absent from Ch4; two chapters without him is the limit before his absence becomes a structural gap rather than a tension.
 
 ---
 
