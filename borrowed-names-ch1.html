@@ -430,6 +430,7 @@ let gs = {
   currentScene: null,
   choiceHistory: [],
   pendingLedger: null,
+  flags: {},
   chapter: 1
 };
 
@@ -1016,7 +1017,7 @@ function closeOverlay(id) { document.getElementById(id).classList.remove('active
 function tryResume() {
   try {
     // First try a mid-session ch1 save (resume exactly where left off)
-    const ch1Raw = localStorage.getItem('wbn_save_ch1');
+    const ch1Raw = localStorage.getItem('wbn_ch1_save');
     if (ch1Raw) {
       const ch1Saved = JSON.parse(ch1Raw);
       if (ch1Saved && ch1Saved.currentScene && ch1Saved.playerWant) {
@@ -1061,6 +1062,7 @@ function loadState(saved) {
     stats: saved.stats || gs.stats,
     npcs: saved.npcs || gs.npcs,
     ledger: saved.ledger || [],
+    flags: saved.flags || {},
     chapter: 1
   });
   initGame();
@@ -1068,7 +1070,7 @@ function loadState(saved) {
 
 function initGame() {
   // Record how many ledger entries came from the prologue
-  if (!gs.ch1LedgerCount) gs.ch1LedgerCount = gs.ledger.length;
+  if (!gs.flags.ch1LedgerCount) gs.flags.ch1LedgerCount = gs.ledger.length;
   document.getElementById('senseLabel').textContent =
     gs.senseType === 'hot' ? 'Reading sense: vivid, present' : 'Reading sense: quiet, precise';
   document.getElementById('float-buttons').style.display = 'flex';
@@ -1310,7 +1312,7 @@ function showChapterEnd() {
   document.getElementById('end-ledger').innerHTML = gs.ledger.length ? buildLedgerHTML() : `<p style="font-style:italic;color:var(--brass-dim);font-size:0.9rem;">No entries recorded.</p>`;
 
   const saveData = btoa(JSON.stringify({
-    v:2, chapter:'one',
+    v:2, chapter:'chapter_one',
     playerName: gs.playerName,
     sealOrigin: gs.sealOrigin,
     senseType: gs.senseType,
@@ -1318,7 +1320,8 @@ function showChapterEnd() {
     stats: gs.stats,
     npcs: gs.npcs,
     ledger: gs.ledger,
-    choiceHistory: gs.choiceHistory
+    choiceHistory: gs.choiceHistory,
+    flags: gs.flags
   }));
   document.getElementById('saveString').value = saveData;
 
@@ -1335,7 +1338,7 @@ function copySave() {
 }
 
 function replayChapter() {
-  const ch1LedgerCount = gs.ch1LedgerCount || 0;
+  const ch1LedgerCount = gs.flags.ch1LedgerCount || 0;
   const prologueLedger = gs.ledger.slice(0, ch1LedgerCount);
   gs.stats = { coverIntegrity:60, rootedness:20, readingExposure:0 };
   gs.npcs = { pell:{suspicion:20,trust:40}, maren:{suspicion:60,trust:10}, efa:{suspicion:20,trust:30}, idris:{suspicion:40,trust:20} };
@@ -1348,20 +1351,20 @@ function replayChapter() {
   gs.choiceHistory = [];
   gs.currentScene = null;
   gs.pendingLedger = null;
-  gs.ch1LedgerCount = ch1LedgerCount;
-  localStorage.removeItem('wbn_save_ch1');
+  gs.flags.ch1LedgerCount = ch1LedgerCount;
+  localStorage.removeItem('wbn_ch1_save');
   document.getElementById('float-buttons').style.display = 'none';
   showScreen('screen-load');
 }
 
 // ── SAVE ──
 function autoSave() {
-  try { localStorage.setItem('wbn_save_ch1', JSON.stringify(gs)); } catch(e) {}
+  try { localStorage.setItem('wbn_ch1_save', JSON.stringify(gs)); } catch(e) {}
 }
 
 // ── INIT ──
 window.addEventListener('load', () => {
-  const ch1Save = localStorage.getItem('wbn_save_ch1');
+  const ch1Save = localStorage.getItem('wbn_ch1_save');
   const prologueSave = localStorage.getItem('wbn_save');
   if (ch1Save) {
     try {

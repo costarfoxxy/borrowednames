@@ -1,6 +1,6 @@
 # The Weight of Borrowed Names — Technical Design Document
 
-*Living reference for Castlemarne. Current as of ch1, ch2, ch3 (unversioned filenames, GitHub is source of truth). Last updated: added narrative arc (§1A) and Chapter Four pre-chapter contract (§15); fixed stale §5 heading; cleaned up §14.*
+*Living reference for Castlemarne. Current as of ch1 (patched), ch2, ch3 (unversioned filenames, GitHub is source of truth). Last updated: added full narrative arc §1B (all beats, chapter count, structure); resolved §9.4 (Vothren offstage, Farren introduced); confirmed Pell as minimal NPC with schema entry; seeded playerName for Ch5+; patched Ch1 §14 inconsistencies (flags location, localStorage key, chapter field); updated §15 with confirmed Ch4 structure.*
 
 This document exists so that a chapter built in a fresh context — whether by Rowan by hand, or generated dynamically later — stays mechanically and canonically consistent with everything before it. Read this before writing scene code. When in doubt, this document is the source of truth over any individual chapter file, since chapter files are where drift actually happens.
 
@@ -34,6 +34,64 @@ These are designed to sometimes trade off against each other (a choice that prot
 
 ---
 
+## 1B. Full Narrative Arc — All Beats
+
+*This section was written before Ch4 scene code began, to establish the shape of the whole story. It should be updated as chapters diverge from the plan, but divergence should be a decision, not a drift. Beat count and chapter count are confirmed here; use this as the structural north star.*
+
+**The central dramatic question:** Can a borrowed name become your own — and what does it cost if it does?
+
+**Secondary engines:**
+- *Mystery engine:* What happened to the real Tessaly?
+- *Threat engine:* What does Vothren actually want?
+- *Want engine:* What did the protagonist come here wanting — and is that still true?
+- *Place engine:* What does the morning room remember, and what does it hold by the end?
+
+### The Ten Beats
+
+**Beat One — Threshold** *(Prologue — done)*
+Coercion dressed as opportunity. The protagonist signs *Tessaly Aldane* under duress. `senseType`, `sealOrigin`, and `playerWant` are chosen here. The reading sense is framed as professionally useful and personally isolating — something tolerated, not welcomed.
+
+**Beat Two — First Night** *(Ch1 — done)*
+The house before anyone wakes. Geography of the lie. Maren guarded, Idris lost, Efa kind. The reading sense almost catches what the morning room remembers. First test: can the name be held overnight?
+
+**Beat Three — The Name Under Pressure** *(Ch2 — done)*
+The household begins testing. Maren's audit is the first real fire. Idris's letter is the first mystery. Voss's letter in the study is the first real temptation — a permanent choice about what the player is willing to know.
+
+**Beat Four — The House Responds** *(Ch3 — done)*
+Pell's shadow falls through correspondence. Idris decides. Maren picks a side. The dream sequence surfaces accumulated Rootedness and Reading Exposure. The house has started to know the player.
+
+**Beat Five — The Outside Arrives** *(Ch4 — next)*
+Aldous Farren arrives in Vothren's place with regrets his employer is unable to attend in person. Pell is present as uneasy co-conspirator — he installed the fake; Farren doesn't know. Farren makes one observation about Tessaly before leaving: *"She has her father's patience."* This sentence is a trap — patience as compliment or warning depends on what the household knows about Voss, and the player doesn't know any of it. Different NPCs react visibly and differently. The deception holds its first external test; a thread comes loose. The player begins to understand what Vothren is actually after.
+
+**Beat Six — What Tessaly Was**
+Something arrives — document, object, or person the reading sense can access — that tells the player who the real Tessaly was. Not Pell's version. The actual one. Did she want to disappear? Is she dead? Did she run from this house, or from something Vothren did? This beat ends with a crack: the player has been filling an absence. Now they know the shape of the person they've been filling it with. *Are they replacing her, or becoming something new in the space she left?*
+
+**Beat Seven — The Name Slips**
+The player's real self surfaces in a way someone can see. High Rootedness makes it likely — they've grown comfortable. Low Cover Integrity makes it likely — the cracks show. One thing lands in the wrong pair of eyes and doesn't quite make sense. The witness becomes either the most valuable ally or the most dangerous liability, depending on accumulated trust. This beat introduces genuine leverage. See §8 for the `playerName` seed — Ch4 plants the near-slip internally; Ch5 is where someone might actually catch it.
+
+**Beat Eight — The Reckoning Assembles**
+Vothren's actual arrival is announced — he's coming himself. Whatever the estate debt is really about becomes clear. The household has to decide what outcome they want; their decisions hinge on what they believe about "Tessaly" and what they know about the real one. The player has to decide which version of themselves walks into the final confrontation.
+
+**Beat Nine — The Confrontation**
+Vothren. Pell. Whatever it costs. The reading sense at its highest-stakes use — the player reads something or someone that changes the scene's terms in real time. Every alliance is called in or failed. The player decides, under pressure, whether the borrowed name is the right weapon for what's happening — or whether something else is.
+
+**Beat Ten — What the House Remembers**
+Falling action. The morning room again. What it holds now. Each NPC's resolution proportional to their ledger and trust score. The player either carries Tessaly's name forward, releases it, or holds something that is neither — a third thing that grew in the space between. The ledger closes.
+
+### Chapter Count
+
+**Seven chapters plus prologue, with a possible brief epilogue for Beat Ten.**
+
+- Prologue, Ch1–Ch3: done (Beats 1–4)
+- Ch4: Beat Five (Farren)
+- Ch5: Beat Six + early Beat Seven (the slip planted, Tessaly's truth emerging)
+- Ch6: Beats Seven–Eight (the name slips properly; the reckoning assembles)
+- Ch7: Beats Nine–Ten (the confrontation; the morning room)
+
+Beat Ten may be short enough to live at the end of Ch7 rather than as a standalone chapter. If Beats Six and Seven require more room than estimated — the leverage dynamic in Beat Seven has real branching depth — the count may reach eight. Discover in the build; don't predict it now.
+
+---
+
 ## 2. Player State Schema
 
 This is the canonical shape of `gs` (game state). Every chapter must read and write this shape exactly. Field names are case-sensitive and must match across all chapters — this is the single most common source of save-string breakage.
@@ -52,10 +110,11 @@ gs = {
   },
 
   npcs: {
-    pell:  { suspicion: 0–100, trust: 0–100 },  // starts 20/40
-    maren: { suspicion: 0–100, trust: 0–100 },  // starts 60/10
-    efa:   { suspicion: 0–100, trust: 0–100 },  // starts 20/30
-    idris: { suspicion: 0–100, trust: 0–100 }   // starts 40/20
+    pell:   { suspicion: 0–100, trust: 0–100 },  // starts 20/40; his suspicion register differs — for him it means "is she worth what this cost me?" not "does she belong here?"
+    maren:  { suspicion: 0–100, trust: 0–100 },  // starts 60/10
+    efa:    { suspicion: 0–100, trust: 0–100 },  // starts 20/30
+    idris:  { suspicion: 0–100, trust: 0–100 },  // starts 40/20
+    farren: { suspicion: 0–100, trust: 0–100 }   // introduced Ch4; starts 30/0 — arrives neutral-watchful, no prior relationship
   },
 
   ledger: [ { question, response, sentiment, effects } ],
@@ -217,18 +276,26 @@ This is a good pattern — it makes the *accumulation* of earlier choices visibl
 
 | Flag | Set in | Should be read in | Currently read in |
 |---|---|---|---|
-| `ch1LedgerCount` | Ch1 (top-level, not `.flags`) | Ch1 replay | Ch1 replay ✓ |
+| `ch1LedgerCount` | Ch1 (`.flags` — patched) | Ch1 replay | Ch1 replay ✓ |
 | `ch1LedgerCount` | Ch2 (`.flags`) | Ch2 replay | Ch2 replay ✓ |
 | `ch3LedgerCount` | Ch3 (`.flags`) | Ch3 replay | Ch3 replay ✓ |
-| `letter_opened` | Ch2 | Ch3+ narrative branching | *nowhere* — gap |
-| `chapter_complete` | Ch2 | Ch3 loader | *nowhere* — gap |
-| `ch3_complete` | Ch3 | Ch4 loader | *nowhere yet — Ch4 doesn't exist* |
+| `letter_opened` | Ch2 | Ch3+ narrative branching, Ch4 §15 payoff | Ch3 `morning_three` ✓; Ch4 pending |
+| `maren_saw_reading` | Ch2 | Ch4 alliance branching | Ch4 pending |
+| `chapter_complete` | Ch2 | Ch3 loader | *nowhere* — low priority |
+| `ch3_complete` | Ch3 | Ch4 loader | Ch4 pending |
+| `ch4_complete` | Ch4 (TBD) | Ch5 loader | *not yet set* |
 
 ---
 
 ## 8. Player Name
 
-`playerName` is captured at character creation and stored faithfully through every save string, but **no scene in any chapter interpolates it into narrative text.** Every "you say your own name" beat stays deliberately abstract ("You say your own name once, into the quiet room"). Given the title of the piece, this may be intentional restraint — but it's worth Rowan making a conscious call rather than it being an accident of chapters written in isolation. If it's meant to surface (e.g., in a climactic moment where the player's real name matters against Tessaly's), that's a good candidate for Chapter Four, where the stakes around identity peak.
+`playerName` is captured at character creation and stored faithfully through every save string, but **no scene in any chapter interpolates it into narrative text yet.** Every "you say your own name" beat stays deliberately abstract ("You say your own name once, into the quiet room"). This is intentional restraint, not an oversight.
+
+**Confirmed plan (decided before Ch4):**
+
+- **Ch4 plants the seed internally.** At Farren's observation — *"She has her father's patience"* — the player's real self almost surfaces in a way that a present NPC could catch. The text registers the near-slip for the player only; no one in the scene notices. High Rootedness makes this beat more present in the prose; low Cover Integrity makes it feel more dangerous. `playerName` is not interpolated here, but the *shape* of the moment is designed to hold it later.
+- **Ch5 is where someone catches it.** Beat Seven (The Name Slips) is the scheduled first interpolation of `playerName` into narrative text — a moment where an NPC hears or reads something that doesn't fit Tessaly, and what they do with it depends on accumulated trust. This is a high-stakes, one-time event; the NPC who witnesses it becomes either the player's most valuable ally or a significant liability.
+- **Do not surface `playerName` before Ch5.** The restraint is load-bearing: the name's appearance needs to feel like a breach, not a texture. Using it earlier as flavor dilutes the moment when it actually matters.
 
 ---
 
@@ -239,7 +306,7 @@ These aren't bugs — they're judgment calls that should be made once and then d
 1. **Should Rootedness or Reading Exposure ever meaningfully decrease?** *Resolved — see §5A.* Manage responses to involuntary hot opens give a real, repeatable exposure refund. Rootedness still has no equivalent lever and remains intentionally closer to one-directional — that asymmetry is a deliberate reading of the theme (you can claw back your composure; you can't as easily claw back how much you've come to feel at home), not an oversight, but worth Rowan confirming.
 2. **What do high vs. low Cover Integrity actually gate, going forward?** So far it mostly flavors text and feeds skill checks (revived in the Ch2 revision pass — see §14). Chapter Four is a good place to make it *load-bearing* — e.g., low cover integrity locking the player out of a "clean" path with Pell.
 3. **Does `senseType` (hot/cold) deserve a second differentiated moment, or was Ch1's desk scene meant to be the one and only showcase?** *Resolved — see §5A.* It's now a running mechanic (the involuntary open + three-way response), not a one-time flavor pick, with Chapter Four's Pell threshold reserved as the flagship instance.
-4. **Is Vothren meant to appear on-page, or stay an offstage pressure?** Ch3 sets him up with real menace ("a collector... of people with unusual gifts") — worth deciding before Ch4 whether he's a character or a permanent horizon threat.
+4. **Is Vothren meant to appear on-page, or stay an offstage pressure?** *Resolved before Ch4.* Vothren stays offstage through at least Ch6. His absence does more work than his presence would at this stage — each chapter his name appears without him should make the eventual arrival (Beat Nine, Ch7) heavier. Ch4 introduces **Aldous Farren**, Vothren's business associate, who arrives with regrets his employer is unable to attend in person. Farren is deliberately unmenacing — polite, calibrated, giving nothing away. He makes one observation about Tessaly (*"She has her father's patience"*) and leaves. The near-miss is the point: the household expected resolution and got deferral instead, which gives everyone — Maren, Idris, Pell, the player — more room to maneuver and more reason to pressure each other. Farren has an NPC schema entry (see §2); his trust/suspicion matter for whether he carries a favorable report back to Vothren.
 
 ---
 
@@ -270,7 +337,7 @@ sceneId: {
 ```
 
 **Effect keys, exhaustive list (must match exactly):**
-`coverIntegrity, rootedness, readingExposure, pellSuspicion, pellTrust, marenSuspicion, marenTrust, efaSuspicion, efaTrust, idrisSuspicion, idrisTrust`
+`coverIntegrity, rootedness, readingExposure, pellSuspicion, pellTrust, marenSuspicion, marenTrust, efaSuspicion, efaTrust, idrisSuspicion, idrisTrust, farrenSuspicion, farrenTrust`
 
 Any new NPC introduced in a later chapter needs: (1) an entry in `gs.npcs`, (2) two new keys added to `statMap` in `applyEffects()`, (3) two new keys added to the `labels` object in `effectsToString()`, (4) an `npcRow()` call added to `buildStatsHTML()`. Missing any one of these four means the new NPC's trust/suspicion silently fails to display or persist. This is the most error-prone part of extending the cast — a checklist item, not just a note.
 
@@ -333,11 +400,11 @@ A reasonable implementation: before generating a new chapter or branch, assemble
 
 ## 14. Known Inconsistencies Still Open (as of this doc)
 
-Carried over from the review pass, not yet resolved, listed here so they don't get lost:
+Items resolved since the last version of this doc are noted inline below. Remaining open items only:
 
-- Ch1's `ch1LedgerCount` lives at `gs.ch1LedgerCount` (top-level); Ch2/Ch3 use `gs.flags.ch1LedgerCount` / `ch3LedgerCount` (nested). Should be unified under `.flags` everywhere.
-- localStorage key naming (`wbn_save_ch1` vs. `wbn_ch2_save`/`wbn_ch3_save`) is inconsistent — see §11.
-- Save-string `chapter` field naming is inconsistent (`'prologue'`, `'one'`, `'chapter_two'`, `'chapter_three'`) — see §11.
+- ~~Ch1's `ch1LedgerCount` lives at `gs.ch1LedgerCount` (top-level); Ch2/Ch3 use `gs.flags.ch1LedgerCount` / `ch3LedgerCount` (nested).~~ **Resolved in Ch1 patch:** `ch1LedgerCount` now lives under `gs.flags` in Ch1, matching Ch2/Ch3. `gs.flags` also added to Ch1 initial state and restored in `loadState()`.
+- ~~localStorage key naming (`wbn_save_ch1` vs. `wbn_ch2_save`/`wbn_ch3_save`) is inconsistent.~~ **Resolved in Ch1 patch:** Ch1 now uses `wbn_ch1_save`, matching the `wbn_ch{N}_save` convention.
+- ~~Save-string `chapter` field naming is inconsistent (`'prologue'`, `'one'`, `'chapter_two'`, `'chapter_three'`).~~ **Resolved in Ch1 patch:** Ch1 save string now uses `'chapter_one'`. Canonical values: `'prologue' | 'chapter_one' | 'chapter_two' | 'chapter_three' | 'chapter_four'`.
 - No loader validates that a pasted save string actually came from the expected predecessor chapter.
 - If a player skips the creditor's letter at `letter_junction` in favor of finding Idris first, there's no return path to read it later — it's simply never resolved on that branch.
 - Project Files does not overwrite or auto-rename on same-name upload — no longer a live risk now that GitHub is the source of truth (see §13), but no chapter file currently embeds a version marker, so a similar problem could recur if the repo convention slips.
@@ -350,32 +417,37 @@ Carried over from the review pass, not yet resolved, listed here so they don't g
 
 *Written before any Ch4 scene code, per the working rhythm established after the Ch2/Ch3 revision pass. This is a contract, not a first draft — it should be revised if the actual writing wants to diverge from it, but divergence should be a decision, not a drift.*
 
-**Emotional arc:** Pell arrives to complete the transfer. Everything the player has built over three chapters — cover, alliances, the reading sense's growing reach, whatever's left of who they were before this — gets tested at once, in a single sustained scene rather than spread across a day. The chapter should end with the player understanding, for the first time with real clarity, what signing costs them specifically, not abstractly. Whether they sign is the climax; what they've become by the time they decide is the point.
+**Emotional arc:** Vothren was expected. Farren arrives instead. Everything the player has built over three chapters — cover, alliances, the reading sense's growing reach, whatever's left of who they were — gets tested in a meeting that was supposed to resolve things and doesn't. The chapter should end with the player understanding, for the first time with real clarity, that this isn't over and that Vothren's patience is not a mercy. The deception holds (or partially holds); the stakes clarify; the near-slip of the player's real self is felt but not yet seen. Ch4 is a pressure chamber, not a climax.
 
-**Scene list (proposed, not final):**
-1. Final morning — brief, tense, mechanical (documents gathered, Maren and/or Idris present depending on Ch3 alliance state)
-2. Pell's arrival — **the hot/cold showcase moment** (§5A), reserved specifically for this beat
-3. Pell's opening terms — branches on Reading Exposure per §5A's setup (Vothren already knows vs. doesn't)
-4. The interrogation / negotiation proper — **should be a skill check** (§5), Cover Integrity vs. Pell's suspicion, following the Ch2 `pre_maren_push` pattern
-5. The `letter_opened` payoff — a forewarned player should have language available here that an unforewarned player doesn't (third use of this flag; see §1A)
-6. The signing — the permanent choice (✦) at the chapter's center. Branches meaningfully on accumulated Rootedness per §1A's closing question
-7. Aftermath / chapter close — sets up whatever comes after Ch4, TBD until Rowan and Sabine decide if this is the finale or a bridge to a fifth chapter
+**Who is Aldous Farren:** Vothren's business associate. A man of careful middles — neither threatening nor warm, politeness calibrated to give nothing away. He handles estate valuation and debt assessment (directly relevant to Voss Aldane's situation). He makes one observation about Tessaly before departing: *"She has her father's patience."* He does not elaborate. NPC schema entry: starts suspicion 30 / trust 0. Whether he carries a favorable or unfavorable report back to Vothren should depend on the player's Cover Integrity and the choices made in his presence — but he should never feel like the actual threat; he's the measuring instrument.
 
-**Stat gates (draft, confirm before building):**
-- High Cover Integrity (finally load-bearing per §9 item 2): unlocks a "clean" negotiation path with Pell that low Cover Integrity forecloses
-- Reading Exposure ≥ 25 (matching the §5A threshold already used in Ch3): Vothren's terms arrive harsher, Pell references things he shouldn't know yet
-- Rootedness: no hard gate proposed, but should visibly color the tone of the ending — very low Rootedness should make the signing read as homecoming rather than surrender, without the game telling the player which one it "really" is
+**Pell's position in Ch4:** He installed the fake and knows it. Farren doesn't. This makes Pell an uneasy co-conspirator for the duration of the meeting — he needs the cover to hold at least as much as the player does, which is a new dynamic. He is now in the NPC schema with trust/suspicion live. His suspicion register differs from the household's: for him it means *"is she worth what this cost me?"*, not *"does she belong here?"* Trust with Pell in Ch4 should be harder to move in either direction than with household NPCs — he's performing alongside the player, not evaluating from the outside, and that changes what gestures matter.
+
+**Scene list (confirmed before build):**
+1. Morning preparation — brief and tense; documents in order, Maren and/or Idris present depending on Ch3 alliance state; the household knows what was expected and registers that something feels wrong before Farren arrives
+2. Farren's arrival — **the hot/cold showcase moment** (§5A, reserved for this beat): a hot reader reads him before he's spoken; a cold reader can choose to hold off and read him deliberately once seated, at the cost of whatever the door itself would have told them in the first second
+3. The meeting proper — Farren presents Vothren's regrets and terms; **should be a skill check** (§5), Cover Integrity vs. Farren's suspicion; Pell present and managing his own performance
+4. *"She has her father's patience"* — the observation lands; different NPCs react differently; the player cannot ask what it means without exposing themselves; this is the chapter's emotional center
+5. The `letter_opened` payoff — a player who read Voss's letter in Ch2 has language available here that an unforewarned player doesn't (third use of this flag; see §1A and §7)
+6. Farren's departure — a brief, permanent choice (✦) about whether the player says anything as he leaves; low Cover Integrity may foreclose the cleaner options
+7. Aftermath — the household reconvenes; alliances shift or solidify depending on how the meeting went; the chapter closes with the player understanding that Vothren is coming himself next time; **the near-slip beat** (internal only — the player feels their real self almost surface at Farren's observation; no one in the scene sees it; high Rootedness makes this more present in the prose; see §8)
+
+**Stat gates (confirmed before build):**
+- High Cover Integrity: unlocks a clean negotiation path with Farren; low Cover Integrity forecloses the most favorable version of scene 3
+- Reading Exposure ≥ 25: Farren's terms arrive with a different weight — he references something he shouldn't know unless Vothren has been watching more carefully than expected
+- Rootedness: no hard gate, but colors the near-slip beat and the aftermath prose — high Rootedness players feel the pull toward naming themselves; low Rootedness players feel the pull toward escape
 
 **Flag contract:**
-- Reads: `letter_opened`, `maren_saw_reading`, plus whichever alliance/dream flags Ch3 sets on its branching endings
-- Sets: at minimum a `ch4_complete` or equivalent, plus whatever permanent marker the signing scene produces — name TBD when the scene is drafted
+- Reads: `letter_opened` (§7), `maren_saw_reading` (§7), `ch3_complete` (loader validation), NPC trust/suspicion from Ch3 endings (no explicit alliance flags set in Ch3 — read `gs.npcs` scores directly with documented thresholds)
+- Sets: `ch4_complete`; `farren_favorable` or `farren_unfavorable` (determines Vothren's posture in Ch6); at minimum one permanent marker from scene 6 (name TBD when drafted)
 
 **NPC state targets by chapter end:**
-- Maren: should have a clear final position — allied, neutral, or (if the player mismanaged Chapters Two and Three) reporting to Vothren
-- Idris: present for at least part of the negotiation if his Ch3 alliance held
-- Pell: not a suspicion/trust NPC in the existing schema — worth deciding whether he needs one, given he's the chapter's central antagonist-or-not
+- Farren: departed; his trust/suspicion frozen at end-of-chapter values and carried forward (they matter in Ch6 when Vothren references his report)
+- Pell: trust/suspicion live for the first time; his final Ch4 position sets his posture for Ch5
+- Maren: a clear position confirmed — the chapter should not end with her alliance ambiguous if Ch3 didn't
+- Idris: present if his Ch3 alliance held; his presence in scene 1 is meaningful
 
-**Chapter boundary — what the player knows and feels the moment Ch4 ends:** unresolved by design; this is the thing Rowan and Sabine should decide together before scene code starts, since it determines whether the game has a Chapter Five at all.
+**Chapter boundary — what the player knows when Ch4 ends:** Vothren was not here. He sent someone instead. Whatever was supposed to be resolved is deferred. The household is more pressured, not less. And somewhere in the middle of the meeting, the player almost said their own name — and caught it. Ch5 begins with that almost still in the room.
 
 ---
 
